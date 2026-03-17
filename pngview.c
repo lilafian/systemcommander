@@ -39,12 +39,14 @@ struct PNG_TRUECOLOR_PIXEL8 {
         uint8_t r;
         uint8_t g;
         uint8_t b;
+        uint8_t a;
 }__attribute__((packed));
 
 struct PNG_TRUECOLOR_PIXEL16 {
         uint16_t r;
         uint16_t g;
         uint16_t b;
+        uint16_t a;
 }__attribute__((packed));
 
 int paeth(int a, int b, int c) {
@@ -94,8 +96,8 @@ int main(int argc, char* argv[]) {
         ihdr->length = ntohl(ihdr->length);
         ihdr->width = ntohl(ihdr->width);
         ihdr->height = ntohl(ihdr->height);
-        if (ihdr->color_type != PNG_COLORTYPE_TRUECOLOR) {
-                printf("pngview does not support this type of png, pngview only supports truecolor with no alpha\n");
+        if ((ihdr->color_type != PNG_COLORTYPE_TRUECOLOR && ihdr->color_type != PNG_COLORTYPE_TRUECOLOR_ALPHA) || ihdr->interlace_method != 0) {
+                printf("pngview does not support this type of png, pngview only supports non-interlaced truecolor (2 or 6)\n%s is of type %d\n", argv[1], ihdr->color_type);
                 return 5;
         }
 
@@ -125,17 +127,28 @@ int main(int argc, char* argv[]) {
                 offset += 8 + next_chunk->length + 4;
         }
 
-        size_t row_bytes = ihdr->width * 3;
+        uint8_t bpp;
+        switch (ihdr->color_type) {
+                case PNG_COLORTYPE_TRUECOLOR: {
+                        bpp = 3 * (ihdr->bit_depth / 8);
+                        break;
+                }
+                case PNG_COLORTYPE_TRUECOLOR_ALPHA: {
+                        bpp = 4 * (ihdr->bit_depth / 8);
+                        break;
+                }
+        }
+
+        size_t row_bytes = ihdr->width * bpp;
         size_t expected_size = (row_bytes + 1) * ihdr->height;
         uint8_t *decompressed_data = malloc(expected_size);
         uLongf sizeulongf = expected_size;
         int uncompress_result = uncompress(decompressed_data, &sizeulongf, compressed_data, compressed_data_size);
         if (uncompress_result != Z_OK || sizeulongf != expected_size) {
-                printf("Failed to decompress image data or unexpected size\n");
+                printf("failed to decompress image data or unexpected size\nexpected %d, got %d\n", expected_size, sizeulongf);
                 return 6;
         }
 
-        uint8_t bpp = 3 * (ihdr->bit_depth / 8);
         uint8_t *real_pixels = malloc(ihdr->width * ihdr->height * bpp);
 
         for (int y = 0; y < ihdr->height; y++) {
@@ -189,18 +202,20 @@ int main(int argc, char* argv[]) {
                 }
         }
 
-        SDL_Init(SDL_INIT_EVERYTHING);
+        SDL_Init(SDL_INIT_VIDEO);
         SDL_Window *window;
         SDL_Renderer *renderer;
         SDL_CreateWindowAndRenderer(ihdr->width, ihdr->height, 0, &window, &renderer);
-        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
-        SDL_RenderClear(renderer);
+        SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
 
         for (int i = 0; i < ihdr->width * ihdr->height * bpp; i += bpp) {
                 switch(ihdr->bit_depth) {
                         case 8: {
                                 struct PNG_TRUECOLOR_PIXEL8 *pixel = (struct PNG_TRUECOLOR_PIXEL8*)(real_pixels + i);
-                                SDL_SetRenderDrawColor(renderer, pixel->r, pixel->g, pixel->b, SDL_ALPHA_OPAQUE);
+                                uint8_t alpha = pixel->a;
+                                if (ihdr->color_type != PNG_COLORTYPE_TRUECOLOR_ALPHA) alpha = SDL_ALPHA_OPAQUE;
+                                SDL_SetRenderDrawColor(renderer, pixel->r, pixel->g, pixel->b, alpha);
+
                                 int pix_i = i / bpp;
                                 SDL_RenderDrawPoint(renderer, pix_i % ihdr->width, pix_i / ihdr->width);
 
@@ -211,8 +226,11 @@ int main(int argc, char* argv[]) {
                                 pixel->r = ntohs(pixel->r);
                                 pixel->g = ntohs(pixel->g);
                                 pixel->b = ntohs(pixel->b);
+                                pixel->a = ntohs(pixel->a);
+                                uint16_t alpha = pixel->a;
+                                if (ihdr->color_type != PNG_COLORTYPE_TRUECOLOR_ALPHA) alpha = SDL_ALPHA_OPAQUE;
                                 
-                                SDL_SetRenderDrawColor(renderer, pixel->r, pixel->g, pixel->b, SDL_ALPHA_OPAQUE);
+                                SDL_SetRenderDrawColor(renderer, pixel->r, pixel->g, pixel->b, alpha);
                                 int pix_i = i / bpp;
                                 SDL_RenderDrawPoint(renderer, pix_i % ihdr->width, pix_i / ihdr->width);
 
