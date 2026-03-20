@@ -27,7 +27,7 @@ override CFLAGS += \
 	-mno-sse2 \
 	-mno-red-zone \
 	-mcmodel=kernel \
-	-Isrc/headers \
+	-Isrc/include \
 
 override LDFLAGS += \
 	-m elf_x86_64 \
