@@ -2,9 +2,10 @@
 
 override KBINOUTPUT := systemcommander
 override ISOOUTPUT := build/systemcommander.iso
+override DEFFONTNAME := ter-116n
 CC := gcc
 LD := ld
-CFLAGS := -g -O2 -pipe
+CFLAGS := -g -O0 -pipe
 LDFLAGS := 
 
 override CFLAGS += \
@@ -61,6 +62,7 @@ iso:
 	mkdir -p build/iso
 	mkdir -p build/iso/boot
 	cp -v build/$(KBINOUTPUT) build/iso/boot
+	cp -v assets/fonts/$(DEFFONTNAME).psf build/iso/boot/deffont.psf
 	mkdir -p build/iso/boot/limine
 	cp -v limine.conf limine/limine-bios.sys limine/limine-bios-cd.bin limine/limine-uefi-cd.bin build/iso/boot/limine
 	mkdir -p build/iso/EFI/BOOT
@@ -80,6 +82,14 @@ clean:
 .PHONY: qemutest
 qemutest:
 	qemu-system-x86_64 \
+		-machine pc \
+		-m 1g \
+		-drive format=raw,media=cdrom,file=$(ISOOUTPUT)
+
+.PHONY: qemutest-gdb
+qemutest-gdb:
+	qemu-system-x86_64 \
+		-s -S \
 		-machine pc \
 		-m 1g \
 		-drive format=raw,media=cdrom,file=$(ISOOUTPUT)

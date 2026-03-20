@@ -1,3 +1,5 @@
+#include <stddef.h>
+#include <stdint.h>
 #include <syscom/stdmemory.h>
 
 void *memcpy(void *restrict dest, const void *restrict src, size_t n) {
