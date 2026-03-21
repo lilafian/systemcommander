@@ -3,6 +3,7 @@
 #include <stdbool.h>
 #include <limine.h>
 #include <syscom/psf.h>
+#include <syscom/console.h>
 
 __attribute__((used, section(".limine_requests")))
 static volatile uint64_t limine_base_revision[] = LIMINE_BASE_REVISION(5);
@@ -56,6 +57,10 @@ void kenter() {
         struct limine_file **modules = module_request.response->modules;
         struct limine_file *font_module = modules[0]; // If more modules get added pls change!
         psf2_header_t *font = (psf2_header_t *)(font_module->address);
+
+        console_t console;
+        console_init(&console, framebuffer, font, 0xffaaaaaa, 0x00000000);
+        console_write(&console, "System Commander version 0.1.0 (Vientiane)");
 
         halt();
 }
