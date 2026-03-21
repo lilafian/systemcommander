@@ -4,6 +4,7 @@
 #include <limine.h>
 #include <syscom/psf.h>
 #include <syscom/console.h>
+#include <syscom/log.h>
 
 __attribute__((used, section(".limine_requests")))
 static volatile uint64_t limine_base_revision[] = LIMINE_BASE_REVISION(5);
@@ -60,7 +61,9 @@ void kenter() {
 
         console_t console;
         console_init(&console, framebuffer, font, 0xffaaaaaa, 0x00000000);
-        console_write(&console, "System Commander version 0.1.0 (Vientiane)");
+
+        set_log_console(&console);
+        log("System Commander version 0.1.0 (Vientiane)\n");
 
         halt();
 }
