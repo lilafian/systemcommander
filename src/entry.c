@@ -56,7 +56,6 @@ void kenter() {
         struct limine_file **modules = module_request.response->modules;
         struct limine_file *font_module = modules[0]; // If more modules get added pls change!
         psf2_header_t *font = (psf2_header_t *)(font_module->address);
-        psf2_draw_string(font, framebuffer, "System Commander version 0.1.0 (Vientiane)", 0, 0, 0xffffffff, 0x00000000);
 
         halt();
 }
