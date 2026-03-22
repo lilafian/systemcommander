@@ -3,6 +3,7 @@
 override KBINOUTPUT := systemcommander
 override ISOOUTPUT := build/systemcommander.iso
 override DEFFONTNAME := ter-116n
+override OVMF_SYS_PATH := /usr/share/OVMF/x64
 CC := gcc
 LD := ld
 CFLAGS := -g -O0 -pipe
@@ -79,11 +80,19 @@ iso:
 clean:
 	rm -rf build obj
 
+.PHONY: vmprepare
+vmprepare:
+	mkdir -p ovmf
+	sudo cp $(OVMF_SYS_PATH)/OVMF_VARS.4m.fd ovmf
+	sudo chmod a+rwx ovmf/OVMF_VARS.4m.fd
+
 .PHONY: qemutest
 qemutest:
 	qemu-system-x86_64 \
 		-machine pc \
 		-m 1g \
+		-drive if=pflash,format=raw,readonly=on,file=$(OVMF_SYS_PATH)/OVMF_CODE.4m.fd \
+		-drive if=pflash,format=raw,file=ovmf/OVMF_VARS.4m.fd \
 		-drive format=raw,media=cdrom,file=$(ISOOUTPUT)
 
 .PHONY: qemutest-gdb
@@ -92,4 +101,6 @@ qemutest-gdb:
 		-s -S \
 		-machine pc \
 		-m 1g \
+		-drive if=pflash,format=raw,readonly=on,file=$(OVMF_SYS_PATH)/OVMF_CODE.4m.fd \
+		-drive if=pflash,format=raw,file=ovmf/OVMF_VARS.4m.fd \
 		-drive format=raw,media=cdrom,file=$(ISOOUTPUT)
