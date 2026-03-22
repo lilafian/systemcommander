@@ -6,6 +6,7 @@
 #include <syscom/console.h>
 #include <syscom/log.h>
 #include <syscom/memory.h>
+#include <syscom/phys_allocator.h>
 
 __attribute__((used, section(".limine_requests")))
 static volatile uint64_t limine_base_revision[] = LIMINE_BASE_REVISION(5);
@@ -19,6 +20,12 @@ static volatile struct limine_framebuffer_request framebuffer_request = {
 __attribute__((used, section(".limine_requests")))
 static volatile struct limine_memmap_request memmap_request = {
         .id = LIMINE_MEMMAP_REQUEST_ID,
+        .revision = 0
+};
+
+__attribute__((used, section(".limine_requests")))
+static volatile struct limine_hhdm_request hhdm_request = {
+        .id = LIMINE_HHDM_REQUEST_ID,
         .revision = 0
 };
 
@@ -50,6 +57,7 @@ static void halt() {
         for (;;) { asm("hlt"); }
 }
 
+uint64_t hhdm_offset;
 void kenter() {
         if (LIMINE_BASE_REVISION_SUPPORTED(limine_base_revision) == false) {
                 halt();
@@ -59,6 +67,8 @@ void kenter() {
                         || framebuffer_request.response->framebuffer_count < 1) {
                 halt();
         }
+
+        hhdm_offset = hhdm_request.response->offset;
 
         struct limine_framebuffer *framebuffer = framebuffer_request.response->framebuffers[0];
 
@@ -71,7 +81,14 @@ void kenter() {
 
         set_log_console(&console);
         log("System Commander version 0.1.0 (Vientiane)\n");
-        logf("Detected %d MiB of usable memory\n", get_memory_size(memmap_request.response) / 1024 / 1024);
+        logf("Detected %d MiB of memory\n", get_memory_size(memmap_request.response) / 1024 / 1024);
+        
+        read_memory_map(memmap_request.response);
+        logf("Free: %d KiB\nUsed: %d KiB\nReserved: %d KiB\n", get_free_memory() / 1024, get_used_memory() / 1024, get_reserved_memory() / 1024);
+
+        for (int i = 0; i < 20; i++) {
+                logf("0x%x\n", request_page());
+        }
 
         halt();
 }
