@@ -26,7 +26,7 @@ void psf2_draw_char(psf2_header_t *font, struct limine_framebuffer *framebuffer,
         }
 }
 
-void psf2_draw_string(psf2_header_t *font, struct limine_framebuffer *framebuffer, char *str, int x, int y, uint32_t fg, uint32_t bg) {
+int psf2_draw_string(psf2_header_t *font, struct limine_framebuffer *framebuffer, char *str, int x, int y, uint32_t fg, uint32_t bg) {
         int nx = x;
         int ny = y;
         while (*str != '\0') {
@@ -40,4 +40,6 @@ void psf2_draw_string(psf2_header_t *font, struct limine_framebuffer *framebuffe
                 nx += font->width;
                 str++;
         }
+
+        return nx;
 }

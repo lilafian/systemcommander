@@ -11,6 +11,10 @@ typedef struct console_t {
         uint32_t fg_color;
         uint32_t bg_color;
         char buf[CONSOLE_BUF_SIZE];
+        int length;
+        int lines;
+        int cursor_x;
+        int cursor_y;
 } console_t;
 
 void console_init(console_t *con, struct limine_framebuffer *framebuffer, psf2_header_t *font, uint32_t fg_color, uint32_t bg_color);
