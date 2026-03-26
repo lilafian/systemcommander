@@ -86,10 +86,5 @@ void kenter() {
         read_memory_map(memmap_request.response);
         logf("Free: %d KiB\nUsed: %d KiB\nReserved: %d KiB\n", get_free_memory() / 1024, get_used_memory() / 1024, get_reserved_memory() / 1024);
 
-        for (int i = 0; i < 35; i++) {
-                log("Hello\n");
-                log("Another test\n");
-        }
-
         halt();
 }
