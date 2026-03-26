@@ -1,14 +1,26 @@
 #include <syscom/log.h>
 #include <syscom/fmt.h>
+#include <syscom/serial.h>
 
 console_t *log_console;
+uint8_t log_mode;
+
+void set_log_mode(uint8_t mode) {
+        log_mode = mode;
+}
 
 void set_log_console(console_t *console) {
         log_console = console;
 }
 
 void log(const char *msg) {
-        console_write(log_console, msg);
+        if (log_mode == LOG_MODE_FRAMEBUFFER_SERIAL) {
+                console_write(log_console, msg);
+        }
+        while (*msg != '\0') {
+                serial_send(COM1, *msg);
+                msg++;
+        }
 }
 
 void logf(const char *fmt, ...) {

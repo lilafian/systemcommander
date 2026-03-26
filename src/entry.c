@@ -7,6 +7,7 @@
 #include <syscom/log.h>
 #include <syscom/memory.h>
 #include <syscom/phys_allocator.h>
+#include <syscom/serial.h>
 
 __attribute__((used, section(".limine_requests")))
 static volatile uint64_t limine_base_revision[] = LIMINE_BASE_REVISION(6);
@@ -63,23 +64,31 @@ void kenter() {
                 halt();
         }
 
+        set_log_mode(LOG_MODE_FRAMEBUFFER_SERIAL);
+
+        bool can_use_fb = true;
         if (framebuffer_request.response == NULL
                         || framebuffer_request.response->framebuffer_count < 1) {
-                halt();
+                set_log_mode(LOG_MODE_SERIAL_ONLY);
+                can_use_fb = false;
         }
 
         hhdm_offset = hhdm_request.response->offset;
 
-        struct limine_framebuffer *framebuffer = framebuffer_request.response->framebuffers[0];
+        if (can_use_fb) {
+                struct limine_framebuffer *framebuffer = framebuffer_request.response->framebuffers[0];
 
-        struct limine_file **modules = module_request.response->modules;
-        struct limine_file *font_module = modules[0]; // If more modules get added pls change!
-        psf2_header_t *font = (psf2_header_t *)(font_module->address);
+                struct limine_file **modules = module_request.response->modules;
+                struct limine_file *font_module = modules[0]; // If more modules get added pls change!
+                psf2_header_t *font = (psf2_header_t *)(font_module->address);
 
-        console_t console;
-        console_init(&console, framebuffer, font, 0xffaaaaaa, 0x00000000);
+                console_t console;
+                console_init(&console, framebuffer, font, 0xffaaaaaa, 0x00000000);
+                set_log_console(&console);
+        }
 
-        set_log_console(&console);
+        serial_init();
+
         log("System Commander version 0.1.0 (Vientiane)\n");
         logf("Detected %d MiB of memory\n", get_memory_size(memmap_request.response) / 1024 / 1024);
         
