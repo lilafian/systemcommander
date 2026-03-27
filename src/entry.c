@@ -8,6 +8,7 @@
 #include <syscom/memory.h>
 #include <syscom/phys_allocator.h>
 #include <syscom/serial.h>
+#include <syscom/page_map.h>
 
 __attribute__((used, section(".limine_requests")))
 static volatile uint64_t limine_base_revision[] = LIMINE_BASE_REVISION(6);
@@ -94,6 +95,16 @@ void kenter() {
         
         read_memory_map(memmap_request.response);
         logf("Free: %d KiB\nUsed: %d KiB\nReserved: %d KiB\n", get_free_memory() / 1024, get_used_memory() / 1024, get_reserved_memory() / 1024);
+
+        uint64_t phys_pml4 = 0;
+        asm volatile ("movq %%cr3, %0" : "=r"(phys_pml4));
+        if (!phys_pml4) {
+                log("Failed to retrieve page map from cr3\n");
+                halt();
+        }
+        uint64_t virt_pml4 = phys_pml4 + hhdm_offset;
+        kernel_pml4 = (page_table_t *)virt_pml4;
+        logf("Found page map (kernel_pml4) at 0x%x (0x%x)\n", phys_pml4, kernel_pml4);
 
         halt();
 }
