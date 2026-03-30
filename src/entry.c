@@ -92,20 +92,21 @@ void kenter() {
         serial_init();
 
         log("System Commander version 0.1.0 (Vientiane)\n");
-        logf("Detected %d MiB of memory\n", get_memory_size(memmap_request.response) / 1024 / 1024);
+
+        logf("[kenter] Detected %d MiB of memory\n", get_memory_size(memmap_request.response) / 1024 / 1024);
         
         read_memory_map(memmap_request.response);
-        logf("Free: %d KiB\nUsed: %d KiB\nReserved: %d KiB\n", get_free_memory() / 1024, get_used_memory() / 1024, get_reserved_memory() / 1024);
+        logf("[kenter] Free: %d KiB\n         Used: %d KiB\n         Reserved: %d KiB\n", get_free_memory() / 1024, get_used_memory() / 1024, get_reserved_memory() / 1024);
 
         uint64_t phys_pml4 = 0;
         asm volatile ("movq %%cr3, %0" : "=r"(phys_pml4));
         if (!phys_pml4) {
-                log("Failed to retrieve page map from cr3\n");
+                log("<FATAL> [kenter] Failed to retrieve page map from cr3\n");
                 halt();
         }
         uint64_t virt_pml4 = phys_pml4 + hhdm_offset;
         kernel_pml4 = (page_table *)virt_pml4;
-        logf("Found page map (kernel_pml4) at 0x%x (0x%x)\n", phys_pml4, kernel_pml4);
+        logf("[kenter] Found page map (kernel_pml4) at 0x%x (0x%x)\n", phys_pml4, kernel_pml4);
 
         heap_init((void*)0x100000000000, 0x10);
 
