@@ -108,7 +108,7 @@ void kenter() {
         kernel_pml4 = (page_table *)virt_pml4;
         logf("[kenter] Found page map (kernel_pml4) at 0x%x (0x%x)\n", phys_pml4, kernel_pml4);
 
-        heap_init((void*)0x100000000000, 0x10);
+        heap_init((void*)HEAP_START_VIRTUAL, 0x10);
 
         halt();
 }

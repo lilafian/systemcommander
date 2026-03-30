@@ -3,6 +3,8 @@
 #include <stddef.h>
 #include <stdbool.h>
 
+#define HEAP_START_VIRTUAL 0x100000000000
+
 typedef struct heap_segment_header {
         size_t size;
         struct heap_segment_header *next;
