@@ -83,7 +83,7 @@ void kenter() {
                 struct limine_file *font_module = modules[0]; // If more modules get added pls change!
                 psf2_header_t *font = (psf2_header_t *)(font_module->address);
 
-                console_t console;
+                console console;
                 console_init(&console, framebuffer, font, 0xffaaaaaa, 0x00000000);
                 set_log_console(&console);
         }
@@ -103,7 +103,7 @@ void kenter() {
                 halt();
         }
         uint64_t virt_pml4 = phys_pml4 + hhdm_offset;
-        kernel_pml4 = (page_table_t *)virt_pml4;
+        kernel_pml4 = (page_table *)virt_pml4;
         logf("Found page map (kernel_pml4) at 0x%x (0x%x)\n", phys_pml4, kernel_pml4);
 
         halt();

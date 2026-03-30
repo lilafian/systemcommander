@@ -26,12 +26,12 @@
 
 #define PAGE_ALIGN(a) ((a) - (a % 0x1000))
 
-typedef uint64_t page_entry_t;
+typedef uint64_t page_entry;
 
-typedef struct {
-    page_entry_t entries[512];
-} __attribute__((aligned(0x1000))) page_table_t;
+typedef struct page_table {
+    page_entry entries[512];
+} __attribute__((aligned(0x1000))) page_table;
 
-extern page_table_t *kernel_pml4;
+extern page_table *kernel_pml4;
 
-void map_virtual_memory(page_table_t *pml4, uint64_t virtual_address, uint64_t physical_address, uint64_t flags);
+void map_virtual_memory(page_table *pml4, uint64_t virtual_address, uint64_t physical_address, uint64_t flags);

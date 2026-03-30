@@ -3,7 +3,7 @@
 #include <syscom/stdmemory.h>
 #include <syscom/hhdm.h>
 
-bitmap_t page_bitmap;
+bitmap page_bitmap;
 uint64_t free;
 uint64_t reserved;
 uint64_t used;

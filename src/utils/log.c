@@ -2,14 +2,14 @@
 #include <syscom/fmt.h>
 #include <syscom/serial.h>
 
-console_t *log_console;
+console *log_console;
 uint8_t log_mode;
 
 void set_log_mode(uint8_t mode) {
         log_mode = mode;
 }
 
-void set_log_console(console_t *console) {
+void set_log_console(console *console) {
         log_console = console;
 }
 

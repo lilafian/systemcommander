@@ -12,8 +12,8 @@ size_t paging_phys_alloc() {
         return phys;
 }
 
-page_table_t *kernel_pml4;
-void map_virtual_memory(page_table_t *pml4, uint64_t virtual_address, uint64_t physical_address, uint64_t flags) {
+page_table *kernel_pml4;
+void map_virtual_memory(page_table *pml4, uint64_t virtual_address, uint64_t physical_address, uint64_t flags) {
         if (virtual_address % 0x1000 != 0) {
                 logf("[map_virtual_memory] attempted to map non-page-aligned virtual address 0x%x to physical address 0x%x", virtual_address, physical_address);
         }

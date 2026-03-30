@@ -4,10 +4,10 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-typedef struct bitmap_t {
+typedef struct bitmap {
         size_t size;
         uint8_t *buffer;
-} bitmap_t;
+} bitmap;
 
-bool bm_get(bitmap_t *bitmap, uint64_t index);
-void bm_set(bitmap_t *bitmap, uint64_t index, bool value);
+bool bm_get(bitmap *bmap, uint64_t index);
+void bm_set(bitmap *bmap, uint64_t index, bool value);

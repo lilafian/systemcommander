@@ -4,7 +4,7 @@
 #include <syscom/fbutil.h>
 #include <syscom/psf.h>
 
-void console_init(console_t *con, struct limine_framebuffer *framebuffer, psf2_header_t *font, uint32_t fg_color, uint32_t bg_color) {
+void console_init(console *con, struct limine_framebuffer *framebuffer, psf2_header_t *font, uint32_t fg_color, uint32_t bg_color) {
         con->framebuffer = framebuffer;
         con->font = font;
         con->fg_color = fg_color;
@@ -16,7 +16,7 @@ void console_init(console_t *con, struct limine_framebuffer *framebuffer, psf2_h
         memset(con->buf, 0, CONSOLE_BUF_SIZE);
 }
 
-void console_write(console_t *con, const char *str) {
+void console_write(console *con, const char *str) {
         size_t to_copy = strlen(str);
 
         if (con->length + to_copy + 1 > CONSOLE_BUF_SIZE) {
@@ -60,7 +60,7 @@ void console_write(console_t *con, const char *str) {
         con->cursor_y = con->lines * con->font->height;
 }
 
-void console_clear(console_t *con) {
+void console_clear(console *con) {
         memset(con->buf, 0, CONSOLE_BUF_SIZE);
         fb_clear(con->framebuffer, con->bg_color);
 }
