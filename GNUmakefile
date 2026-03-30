@@ -5,8 +5,10 @@ override ISOOUTPUT := build/systemcommander.iso
 override DEFFONTNAME := ter-116n
 override OVMF_SYS_PATH := /usr/share/OVMF/x64
 CC := gcc
+NASM := nasm
 LD := ld
 CFLAGS := -g -O0 -pipe
+NASMFLAGS := -g
 LDFLAGS := 
 
 override CFLAGS += \
@@ -31,6 +33,11 @@ override CFLAGS += \
 	-mcmodel=kernel \
 	-Isrc/include \
 
+override NASMFLAGS += \
+	-f elf64 \
+	$(patsubst -g,-g -F dwarf,$(NASMFLAGS)) \
+	-Wall
+
 override LDFLAGS += \
 	-m elf_x86_64 \
 	-nostdlib \
@@ -41,7 +48,8 @@ override LDFLAGS += \
 
 override ALL_SRC := $(shell find -L src -type f 2>/dev/null | LC_ALL=C sort)
 override C_FILES := $(filter %.c,$(ALL_SRC))
-override OBJ := $(addprefix obj/,$(C_FILES:.c=.c.o))
+override ASM_FILES := $(filter %.asm,$(ALL_SRC))
+override OBJ := $(addprefix obj/,$(C_FILES:.c=.c.o) $(ASM_FILES:.asm=.asm.o))
 override HEADER_DEPS := $(addprefix obj/,$(CFILES:.c=.c.d) $(ASFILES:.S=.S.d))
 
 .PHONY: all
@@ -56,6 +64,10 @@ build/$(KBINOUTPUT): GNUmakefile linker.lds $(OBJ)
 obj/%.c.o: %.c GNUmakefile
 	mkdir -p "$(dir $@)"
 	$(CC) $(CFLAGS) -c $< -o $@
+
+obj/%.asm.o: %.asm GNUmakefile
+	mkdir -p "$(dir $@)"
+	$(NASM) $(NASMFLAGS) $< -o $@
 
 .PHONY: iso
 iso:
