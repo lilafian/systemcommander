@@ -4,41 +4,41 @@
 #include <syscom/hhdm.h>
 
 bitmap page_bitmap;
-uint64_t free;
-uint64_t reserved;
-uint64_t used;
+uint64_t free_memory;
+uint64_t reserved_memory;
+uint64_t used_memory;
 bool initialized = false;
 
 void free_page(void *addr) {
         uint64_t index = (uint64_t)addr / 4096;
         if (bm_get(&page_bitmap, index) == false) return;
         bm_set(&page_bitmap, index, false);
-        free += 4096;
-        used -= 4096;
+        free_memory += 4096;
+        used_memory -= 4096;
 }
 
 void lock_page(void *addr) {
         uint64_t index = (uint64_t)addr / 4096;
         if (bm_get(&page_bitmap, index) == true) return;
         bm_set(&page_bitmap, index, true);
-        free -= 4096;
-        used += 4096;
+        free_memory -= 4096;
+        used_memory += 4096;
 }
 
 void reserve_page(void *addr) {
         uint64_t index = (uint64_t)addr / 4096;
         if (bm_get(&page_bitmap, index) == true) return;
         bm_set(&page_bitmap, index, true);
-        free -= 4096;
-        reserved += 4096;
+        free_memory -= 4096;
+        reserved_memory += 4096;
 }
 
 void release_page(void *addr) {
         uint64_t index = (uint64_t)addr / 4096;
         if (bm_get(&page_bitmap, index) == false) return;
         bm_set(&page_bitmap, index, false);
-        free += 4096;
-        reserved -= 4096;
+        free_memory += 4096;
+        reserved_memory -= 4096;
 }
 
 void free_pages(void *addr, uint64_t count) {
@@ -96,7 +96,7 @@ void read_memory_map(struct limine_memmap_response *map) {
         }
 
         uint64_t memory_size = get_memory_size(map);
-        free = memory_size;
+        free_memory = memory_size;
         uint64_t bitmap_size = memory_size / 4096 / 8 + 1;
 
         page_bitmap.size = bitmap_size;
@@ -111,16 +111,18 @@ void read_memory_map(struct limine_memmap_response *map) {
                         reserve_pages((void*)entry->base, (entry->length + 4095) / 4096);
                 }
         }
+        
+        lock_page((void *)0x0);
 }
 
 uint64_t get_free_memory() {
-        return free;
+        return free_memory;
 }
 
 uint64_t get_used_memory() {
-        return used;
+        return used_memory;
 }
 
 uint64_t get_reserved_memory() {
-        return reserved;
+        return reserved_memory;
 }

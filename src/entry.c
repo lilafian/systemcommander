@@ -9,6 +9,7 @@
 #include <syscom/phys_allocator.h>
 #include <syscom/serial.h>
 #include <syscom/page_map.h>
+#include <syscom/heap.h>
 
 __attribute__((used, section(".limine_requests")))
 static volatile uint64_t limine_base_revision[] = LIMINE_BASE_REVISION(6);
@@ -105,6 +106,8 @@ void kenter() {
         uint64_t virt_pml4 = phys_pml4 + hhdm_offset;
         kernel_pml4 = (page_table *)virt_pml4;
         logf("Found page map (kernel_pml4) at 0x%x (0x%x)\n", phys_pml4, kernel_pml4);
+
+        heap_init((void*)0x100000000000, 0x10);
 
         halt();
 }

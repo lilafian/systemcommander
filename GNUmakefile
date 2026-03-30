@@ -94,7 +94,8 @@ qemutest:
 		-drive if=pflash,format=raw,readonly=on,file=$(OVMF_SYS_PATH)/OVMF_CODE.4m.fd \
 		-drive if=pflash,format=raw,file=ovmf/OVMF_VARS.4m.fd \
 		-drive format=raw,media=cdrom,file=$(ISOOUTPUT) \
-		-serial stdio
+		-serial stdio \
+		-no-reboot
 
 .PHONY: qemutest-gdb
 qemutest-gdb:
@@ -105,4 +106,5 @@ qemutest-gdb:
 		-drive if=pflash,format=raw,readonly=on,file=$(OVMF_SYS_PATH)/OVMF_CODE.4m.fd \
 		-drive if=pflash,format=raw,file=ovmf/OVMF_VARS.4m.fd \
 		-drive format=raw,media=cdrom,file=$(ISOOUTPUT) \
-		-serial stdio
+		-serial stdio \
+		-no-reboot
