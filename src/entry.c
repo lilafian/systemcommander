@@ -10,6 +10,7 @@
 #include <syscom/serial.h>
 #include <syscom/page_map.h>
 #include <syscom/heap.h>
+#include <syscom/panic.h>
 
 __attribute__((used, section(".limine_requests")))
 static volatile uint64_t limine_base_revision[] = LIMINE_BASE_REVISION(6);
@@ -101,8 +102,7 @@ void kenter() {
         uint64_t phys_pml4 = 0;
         asm volatile ("movq %%cr3, %0" : "=r"(phys_pml4));
         if (!phys_pml4) {
-                log("<FATAL> [kenter] Failed to retrieve page map from cr3\n");
-                halt();
+                panic("[kenter] Failed to retrieve page map from cr3");
         }
         uint64_t virt_pml4 = phys_pml4 + hhdm_offset;
         kernel_pml4 = (page_table *)virt_pml4;
