@@ -141,7 +141,5 @@ void kenter() {
 
         heap_init((void*)HEAP_START_VIRTUAL, 0x10);
 
-        *(int *)0x9000 = 5;
-
         halt();
 }
