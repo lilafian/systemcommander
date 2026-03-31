@@ -13,6 +13,8 @@
 #include <syscom/panic.h>
 #include <syscom/gdt.h>
 #include <syscom/interrupts.h>
+#include <syscom/acpi.h>
+#include <syscom/pci.h>
 
 __attribute__((used, section(".limine_requests")))
 static volatile uint64_t limine_base_revision[] = LIMINE_BASE_REVISION(6);
@@ -51,6 +53,12 @@ static volatile struct limine_module_request module_request = {
         .revision = 1,
         .internal_module_count = 1,
         .internal_modules = modules
+};
+
+__attribute__((used, section(".limine_requests")))
+static volatile struct limine_rsdp_request rsdp_request = {
+        .id = LIMINE_RSDP_REQUEST_ID,
+        .revision = 1
 };
 
 __attribute__((used, section(".limine_requests_start")))
@@ -140,6 +148,20 @@ void kenter() {
         logf("[kenter] Found page map (kernel_pml4) at 0x%x (0x%x)\n", phys_pml4, kernel_pml4);
 
         heap_init((void*)HEAP_START_VIRTUAL, 0x10);
+
+        rsdp2 *rsdp = (rsdp2 *)rsdp_request.response->address;
+        for (int i = 0; i < 8; i++) {
+                map_virtual_memory(kernel_pml4, PAGE_ALIGN((uint64_t)rsdp + i), PAGE_ALIGN((uint64_t)rsdp + i), PAGE_RW | PAGE_USER);
+        }
+
+        sdt_header *xsdt = (sdt_header *)rsdp->xsdt_address;
+        map_virtual_memory(kernel_pml4, PAGE_ALIGN((uint64_t)xsdt), PAGE_ALIGN((uint64_t)xsdt), PAGE_RW | PAGE_USER);
+        mcfg_header *mcfg = (mcfg_header *)acpi_find_table(xsdt, "MCFG");
+        map_virtual_memory(kernel_pml4, PAGE_ALIGN((uint64_t)mcfg), PAGE_ALIGN((uint64_t)mcfg), PAGE_RW | PAGE_USER);
+        if (mcfg == NULL) {
+                panic("[kenter] Failed to find MCFG table");
+        }
+        pci_enumerate(mcfg);
 
         halt();
 }

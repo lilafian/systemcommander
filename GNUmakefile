@@ -8,6 +8,7 @@ CC := gcc
 NASM := nasm
 LD := ld
 CFLAGS := -g -O0 -pipe
+QEMUFLAGS := -machine q35 -m 1g -no-reboot
 NASMFLAGS := -g
 LDFLAGS := 
 
@@ -32,6 +33,13 @@ override CFLAGS += \
 	-mno-red-zone \
 	-mcmodel=kernel \
 	-Isrc/include \
+
+override QEMUFLAGS += \
+	-device piix3-ide,id=ide \
+	-drive id=disk,format=raw,if=none,media=cdrom,file=$(ISOOUTPUT) \
+	-device ide-cd,drive=disk,bus=ide.0 \
+	-drive if=pflash,format=raw,readonly=on,file=$(OVMF_SYS_PATH)/OVMF_CODE.4m.fd \
+	-drive if=pflash,format=raw,file=ovmf/OVMF_VARS.4m.fd \
 
 override NASMFLAGS += \
 	-f elf64 \
@@ -101,22 +109,25 @@ vmprepare:
 .PHONY: qemutest
 qemutest:
 	qemu-system-x86_64 \
-		-machine pc \
-		-m 1g \
-		-drive if=pflash,format=raw,readonly=on,file=$(OVMF_SYS_PATH)/OVMF_CODE.4m.fd \
-		-drive if=pflash,format=raw,file=ovmf/OVMF_VARS.4m.fd \
-		-drive format=raw,media=cdrom,file=$(ISOOUTPUT) \
 		-serial stdio \
-		-no-reboot
+		$(QEMUFLAGS)
+
+.PHONY: qemutest-nographic
+qemutest-nographic:
+	qemu-system-x86_64 \
+		-nographic \
+		$(QEMUFLAGS)
 
 .PHONY: qemutest-gdb
 qemutest-gdb:
 	qemu-system-x86_64 \
 		-s -S \
-		-machine pc \
-		-m 1g \
-		-drive if=pflash,format=raw,readonly=on,file=$(OVMF_SYS_PATH)/OVMF_CODE.4m.fd \
-		-drive if=pflash,format=raw,file=ovmf/OVMF_VARS.4m.fd \
-		-drive format=raw,media=cdrom,file=$(ISOOUTPUT) \
 		-serial stdio \
-		-no-reboot
+		$(QEMUFLAGS)
+
+.PHONY: qemutest-gdb-nographic
+qemutest-gdb-nographic:
+	qemu-system-x86_64 \
+		-nographic \
+		-s -S \
+		$(QEMUFLAGS)
