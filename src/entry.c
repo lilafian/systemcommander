@@ -11,6 +11,8 @@
 #include <syscom/page_map.h>
 #include <syscom/heap.h>
 #include <syscom/panic.h>
+#include <syscom/gdt.h>
+#include <syscom/interrupts.h>
 
 __attribute__((used, section(".limine_requests")))
 static volatile uint64_t limine_base_revision[] = LIMINE_BASE_REVISION(6);
@@ -99,6 +101,35 @@ void kenter() {
         read_memory_map(memmap_request.response);
         logf("[kenter] Free: %d KiB\n         Used: %d KiB\n         Reserved: %d KiB\n", get_free_memory() / 1024, get_used_memory() / 1024, get_reserved_memory() / 1024);
 
+        gdt_descriptor gdt_desc;
+        gdt_desc.size = sizeof(gdt) - 1;
+        gdt_desc.offset = (uint64_t)&default_gdt;
+        load_gdt(&gdt_desc);
+
+        idtr idtr_struct;
+        idtr_struct.limit = 0x0fff;
+        idtr_struct.offset = (uint64_t)request_page() + hhdm_offset;
+
+        register_interrupt_handler(idtr_struct, 0x00, (uint64_t)inthdlr_division_error);
+        register_interrupt_handler(idtr_struct, 0x05, (uint64_t)inthdlr_bound_range_exceeded);
+        register_interrupt_handler(idtr_struct, 0x06, (uint64_t)inthdlr_invalid_opcode);
+        register_interrupt_handler(idtr_struct, 0x07, (uint64_t)inthdlr_device_not_available);
+        register_interrupt_handler(idtr_struct, 0x0A, (uint64_t)inthdlr_invalid_tss);
+        register_interrupt_handler(idtr_struct, 0x0B, (uint64_t)inthdlr_segment_not_present);
+        register_interrupt_handler(idtr_struct, 0x0C, (uint64_t)inthdlr_stackseg_fault);
+        register_interrupt_handler(idtr_struct, 0x0D, (uint64_t)inthdlr_genprotect_fault);
+        register_interrupt_handler(idtr_struct, 0x0E, (uint64_t)inthdlr_page_fault);
+        register_interrupt_handler(idtr_struct, 0x10, (uint64_t)inthdlr_fp_exception);
+        register_interrupt_handler(idtr_struct, 0x11, (uint64_t)inthdlr_alignment_check);
+        register_interrupt_handler(idtr_struct, 0x13, (uint64_t)inthdlr_simd_fp_exception);
+        register_interrupt_handler(idtr_struct, 0x14, (uint64_t)inthdlr_virtualization_exception);
+        register_interrupt_handler(idtr_struct, 0x15, (uint64_t)inthdlr_conprotect_exception);
+        register_interrupt_handler(idtr_struct, 0x1C, (uint64_t)inthdlr_hypervisor_inj_exception);
+        register_interrupt_handler(idtr_struct, 0x1D, (uint64_t)inthdlr_vmm_communication_exception);
+        register_interrupt_handler(idtr_struct, 0x1E, (uint64_t)inthdlr_security_exception);
+
+        asm volatile ("lidt %0" :: "m" (idtr_struct));
+
         uint64_t phys_pml4 = 0;
         asm volatile ("movq %%cr3, %0" : "=r"(phys_pml4));
         if (!phys_pml4) {
@@ -109,6 +140,8 @@ void kenter() {
         logf("[kenter] Found page map (kernel_pml4) at 0x%x (0x%x)\n", phys_pml4, kernel_pml4);
 
         heap_init((void*)HEAP_START_VIRTUAL, 0x10);
+
+        *(int *)0x9000 = 5;
 
         halt();
 }
