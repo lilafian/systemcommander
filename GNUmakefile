@@ -1,7 +1,7 @@
 .SUFFIXES:
 
 override KBINOUTPUT := systemcommander
-override ISOOUTPUT := build/systemcommander.iso
+override IMGOUTPUT := build/systemcommander.img
 override DEFFONTNAME := ter-116n
 override OVMF_SYS_PATH := /usr/share/OVMF/x64
 CC := gcc
@@ -36,8 +36,8 @@ override CFLAGS += \
 
 override QEMUFLAGS += \
 	-device piix3-ide,id=ide \
-	-drive id=disk,format=raw,if=none,media=cdrom,file=$(ISOOUTPUT) \
-	-device ide-cd,drive=disk,bus=ide.0 \
+	-drive id=disk,format=raw,if=none,media=disk,file=$(IMGOUTPUT) \
+	-device ide-hd,drive=disk,bus=ide.0 \
 	-drive if=pflash,format=raw,readonly=on,file=$(OVMF_SYS_PATH)/OVMF_CODE.4m.fd \
 	-drive if=pflash,format=raw,file=ovmf/OVMF_VARS.4m.fd \
 
@@ -77,24 +77,47 @@ obj/%.asm.o: %.asm GNUmakefile
 	mkdir -p "$(dir $@)"
 	$(NASM) $(NASMFLAGS) $< -o $@
 
-.PHONY: iso
-iso:
+.PHONY: bootimg-efi
+bootimg-efi:
 	make -C limine
-	mkdir -p build/iso
-	mkdir -p build/iso/boot
-	cp -v build/$(KBINOUTPUT) build/iso/boot
-	cp -v assets/fonts/$(DEFFONTNAME).psf build/iso/boot/deffont.psf
-	mkdir -p build/iso/boot/limine
-	cp -v limine.conf limine/limine-bios.sys limine/limine-bios-cd.bin limine/limine-uefi-cd.bin build/iso/boot/limine
-	mkdir -p build/iso/EFI/BOOT
-	cp -v limine/BOOTX64.EFI build/iso/EFI/BOOT
-	cp -v limine/BOOTIA32.EFI build/iso/EFI/BOOT
-	xorriso -as mkisofs -R -r -J -b boot/limine/limine-bios-cd.bin \
-		-no-emul-boot -boot-load-size 4 -boot-info-table -hfsplus \
-		-apm-block-size 2048 --efi-boot boot/limine/limine-uefi-cd.bin \
-		-efi-boot-part --efi-boot-image --protective-msdos-label \
-		build/iso -o $(ISOOUTPUT)
-	limine/limine bios-install $(ISOOUTPUT)
+	mkdir -p build/img/boot
+	cp -v build/$(KBINOUTPUT) build/img/boot
+	cp -v assets/fonts/$(DEFFONTNAME).psf build/img/boot/deffont.psf
+	mkdir -p build/img/boot/limine
+	cp -v limine.conf limine/limine-uefi-cd.bin build/img/boot/limine
+	mkdir -p build/img/EFI/BOOT
+	cp -v limine/BOOTX64.EFI build/img/EFI/BOOT
+	cp -v limine/BOOTIA32.EFI build/img/EFI/BOOT
+	dd if=/dev/zero of=$(IMGOUTPUT) bs=4M count=256 status=progress conv=fsync # 1g image
+	parted $(IMGOUTPUT) mklabel gpt
+	parted -a optimal $(IMGOUTPUT) mkpart primary 1MiB 100%
+	LOOP=$$(sudo losetup --partscan --show --find $(IMGOUTPUT)); \
+	sudo mkfs.fat -F 32 $${LOOP}p1; \
+	mkdir -p build/imgmp; \
+	sudo mount $${LOOP}p1 build/imgmp; \
+	sudo cp -rv build/img/* build/imgmp; \
+	sudo umount build/imgmp; \
+	sudo losetup -d $${LOOP}
+
+.PHONY: bootimg-bios
+bootimg-bios:
+	make -C limine
+	mkdir -p build/img/boot
+	cp -v build/$(KBINOUTPUT) build/img/boot
+	cp -v assets/fonts/$(DEFFONTNAME).psf build/img/boot/deffont.psf
+	mkdir -p build/img/boot/limine
+	cp -v limine.conf limine/limine-bios.sys limine/limine-bios-cd.bin build/img/boot/limine
+	dd if=/dev/zero of=$(IMGOUTPUT) bs=4M count=256 status=progress conv=fsync # 1g image
+	parted $(IMGOUTPUT) mklabel msdos
+	parted -a optimal $(IMGOUTPUT) mkpart primary 1MiB 100%
+	LOOP=$$(sudo losetup --partscan --show --find $(IMGOUTPUT)); \
+	sudo mkfs.fat -F 32 $${LOOP}p1; \
+	mkdir -p build/imgmp; \
+	sudo mount $${LOOP}p1 build/imgmp; \
+	sudo cp -rv build/img/* build/imgmp; \
+	sudo umount build/imgmp; \
+	sudo losetup -d $${LOOP}
+	limine/limine bios-install $(IMGOUTPUT)
 
 .PHONY: clean
 clean:
