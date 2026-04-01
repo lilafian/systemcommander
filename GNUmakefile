@@ -35,9 +35,7 @@ override CFLAGS += \
 	-Isrc/include \
 
 override QEMUFLAGS += \
-	-device piix3-ide,id=ide \
-	-drive id=disk,format=raw,if=none,media=disk,file=$(IMGOUTPUT) \
-	-device ide-hd,drive=disk,bus=ide.0 \
+	-drive format=raw,media=disk,file=$(IMGOUTPUT) \
 	-drive if=pflash,format=raw,readonly=on,file=$(OVMF_SYS_PATH)/OVMF_CODE.4m.fd \
 	-drive if=pflash,format=raw,file=ovmf/OVMF_VARS.4m.fd \
 
