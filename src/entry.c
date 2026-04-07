@@ -108,10 +108,10 @@ void kenter() {
 
         log("System Commander version 0.1.0 (Vientiane)\n");
 
-        logf("[kenter] Detected %d MiB of memory\n", get_memory_size(memmap_request.response) / 1024 / 1024);
+        logf("[init:kenter] Detected %d MiB of memory\n", get_memory_size(memmap_request.response) / 1024 / 1024);
         
         read_memory_map(memmap_request.response);
-        logf("[kenter] Free: %d KiB\n         Used: %d KiB\n         Reserved: %d KiB\n", get_free_memory() / 1024, get_used_memory() / 1024, get_reserved_memory() / 1024);
+        logf("[init:kenter] Free: %d KiB\n         Used: %d KiB\n         Reserved: %d KiB\n", get_free_memory() / 1024, get_used_memory() / 1024, get_reserved_memory() / 1024);
 
         gdt_descriptor gdt_desc;
         gdt_desc.size = sizeof(gdt) - 1;
@@ -145,17 +145,17 @@ void kenter() {
         uint64_t phys_pml4 = 0;
         asm volatile ("movq %%cr3, %0" : "=r"(phys_pml4));
         if (!phys_pml4) {
-                panic("[kenter] Failed to retrieve page map from cr3");
+                panic("[init:kenter] Failed to retrieve page map from cr3");
         }
         uint64_t virt_pml4 = phys_pml4 + hhdm_offset;
         kernel_pml4 = (page_table *)virt_pml4;
-        logf("[kenter] Found page map (kernel_pml4) at 0x%x (0x%x)\n", phys_pml4, kernel_pml4);
+        logf("[init:kenter] Found page map (kernel_pml4) at 0x%x (0x%x)\n", phys_pml4, kernel_pml4);
 
         heap_init((void*)HEAP_START_VIRTUAL, 0x10);
 
         rsdp2 *rsdp = (rsdp2 *)rsdp_request.response->address;
-        for (int i = 0; i < 8; i++) {
-                map_virtual_memory(kernel_pml4, PAGE_ALIGN((uint64_t)rsdp + i), PAGE_ALIGN((uint64_t)rsdp + i), PAGE_RW | PAGE_USER);
+        for (int i = 0; i < 0x8000; i += 0x1000) {
+                map_virtual_memory(kernel_pml4, PAGE_ALIGN((uint64_t)rsdp + i), PAGE_ALIGN((uint64_t)rsdp + i), PAGE_RW);
         }
 
         sdt_header *xsdt = (sdt_header *)rsdp->xsdt_address;
@@ -163,7 +163,7 @@ void kenter() {
         mcfg_header *mcfg = (mcfg_header *)acpi_find_table(xsdt, "MCFG");
         map_virtual_memory(kernel_pml4, PAGE_ALIGN((uint64_t)mcfg), PAGE_ALIGN((uint64_t)mcfg), PAGE_RW | PAGE_USER);
         if (mcfg == NULL) {
-                panic("[kenter] Failed to find MCFG table");
+                panic("[init:kenter] Failed to find MCFG table");
         }
         pci_enumerate(mcfg);
 

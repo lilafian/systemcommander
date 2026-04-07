@@ -27,7 +27,7 @@ typedef struct sdt_header {
         char oem_table_id[8];
         uint32_t oem_revision;
         char creator_id[4];
-        uint32_t creator_revision
+        uint32_t creator_revision;
 }__attribute__((packed)) sdt_header;
 
 typedef struct mcfg_header {

@@ -22,4 +22,21 @@ typedef struct pci_device_header {
     uint8_t bist;
 }__attribute__((packed)) pci_device_header;
 
+typedef struct pci_general_device {
+        pci_device_header header;
+        uint32_t bar[6];
+        uint32_t cardbus_cis;
+        uint16_t subsys_vendor_id;
+        uint16_t subsys_id;
+        uint32_t expansion_rom;
+        uint8_t capabilities_ptr;
+        uint8_t _reserved0;
+        uint16_t _reserved1;
+        uint32_t _reserved2;
+        uint8_t interrupt_line;
+        uint8_t interrupt_pin;
+        uint8_t min_grant;
+        uint8_t max_latency;
+}__attribute__((packed)) pci_general_device;
+
 void pci_enumerate(mcfg_header* mcfg);
