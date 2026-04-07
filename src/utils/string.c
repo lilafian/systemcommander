@@ -1,3 +1,7 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later
+ * Defines functions included in the C standard library for working with strings.
+ * Copyright (C) 2026 lilaf */
+
 #include <syscom/string.h>
 
 size_t strlen(const char *s) {

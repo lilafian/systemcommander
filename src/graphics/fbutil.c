@@ -1,3 +1,7 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later
+ * Defines functions for modifying the framebuffer.
+ * Copyright (C) 2026 lilaf */
+
 #include <syscom/fbutil.h>
 #include <syscom/stdmemory.h>
 

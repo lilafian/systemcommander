@@ -1,3 +1,7 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later
+ * Function for loading the GDT.
+ * Copyright (C) 2026 lilaf */
+
 [bits 64]
 
 load_gdt:

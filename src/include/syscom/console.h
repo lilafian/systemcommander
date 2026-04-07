@@ -1,3 +1,7 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later
+ * Declares structures and functions for a basic console.
+ * Copyright (C) 2026 lilaf */
+
 #pragma once
 
 #include <limine.h>

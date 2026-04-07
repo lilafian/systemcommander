@@ -1,3 +1,7 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later
+ * Defines functions for using a bitmap.
+ * Copyright (C) 2026 lilaf */
+
 #include <syscom/bitmap.h>
 
 bool bm_get(bitmap *bmap, uint64_t index) {

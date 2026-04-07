@@ -1,3 +1,7 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later
+ * Defines functions for using the physical memory allocator.
+ * Copyright (C) 2026 lilaf */
+
 #include <syscom/phys_allocator.h>
 #include <syscom/bitmap.h>
 #include <syscom/stdmemory.h>

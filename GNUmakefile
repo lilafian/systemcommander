@@ -1,3 +1,7 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Defines rules for building and testing parts of the kernel.
+# Copyright (C) 2026 lilaf */
+
 .SUFFIXES:
 
 override KBINOUTPUT := systemcommander

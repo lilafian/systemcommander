@@ -1,3 +1,7 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later
+ * Kernel entry function and bootloader requests.
+ * Copyright (C) 2026 lilaf */
+
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>

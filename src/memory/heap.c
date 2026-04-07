@@ -1,3 +1,7 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later
+ * Defines functions for using the kernel heap.
+ * Copyright (C) 2026 lilaf */
+
 #include <syscom/heap.h>
 #include <syscom/page_map.h>
 #include <syscom/phys_allocator.h>

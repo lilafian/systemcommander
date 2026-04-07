@@ -1,3 +1,7 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later
+ * Declares a function for mapping virtual pages to physical pages.
+ * Copyright (C) 2026 lilaf */
+
 #pragma once
 
 #include <stdint.h>

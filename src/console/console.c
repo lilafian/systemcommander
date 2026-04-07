@@ -1,3 +1,7 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later
+ * Basic console functions.
+ * Copyright (C) 2026 lilaf */
+
 #include <syscom/console.h>
 #include <syscom/stdmemory.h>
 #include <syscom/string.h>

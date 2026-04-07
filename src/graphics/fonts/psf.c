@@ -1,3 +1,7 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later
+ * Defines functions for drawing characters and strings with a PC Screen Font file.
+ * Copyright (C) 2026 lilaf */
+
 #include <syscom/psf.h>
 
 void psf2_draw_char(psf2_header_t *font, struct limine_framebuffer *framebuffer, char c, int x, int y, uint32_t fg, uint32_t bg) {

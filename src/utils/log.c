@@ -1,3 +1,7 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later
+ * Defines functions for logging to the kernel log.
+ * Copyright (C) 2026 lilaf */
+
 #include <syscom/log.h>
 #include <syscom/fmt.h>
 #include <syscom/serial.h>

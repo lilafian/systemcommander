@@ -1,3 +1,7 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later
+ * Defines functions for sending/receiving data by ports.
+ * Copyright (C) 2026 lilaf */
+
 #include <syscom/ports.h>
 
 uint8_t port_inb(uint16_t port) {

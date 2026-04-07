@@ -1,3 +1,7 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later
+ * Declares functions for modifying the framebuffer.
+ * Copyright (C) 2026 lilaf */
+
 #pragma once
 
 #include <stdint.h>

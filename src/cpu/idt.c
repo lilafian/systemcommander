@@ -1,3 +1,7 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later
+ * Functions for modifying the IDT.
+ * Copyright (C) 2026 lilaf */
+
 #include <syscom/idt.h>
 
 void idtdesce_set_offset(idt_descriptor_entry* entry, uint64_t offset) {

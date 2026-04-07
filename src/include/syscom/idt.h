@@ -1,3 +1,7 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later
+ * Declares structures and functions for modifying and using the IDT.
+ * Copyright (C) 2026 lilaf */
+
 #pragma once
 
 #include <stdint.h>

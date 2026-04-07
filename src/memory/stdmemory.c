@@ -1,3 +1,7 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later
+ * Defines functions included in the C standard library for managing contents of memory.
+ * Copyright (C) 2026 lilaf */
+
 #include <stddef.h>
 #include <stdint.h>
 #include <syscom/stdmemory.h>

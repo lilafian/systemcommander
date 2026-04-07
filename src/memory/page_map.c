@@ -1,3 +1,7 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later
+ * Defines functions for mapping virtual pages to physical ones.
+ * Copyright (C) 2026 lilaf */
+
 #include <stddef.h>
 #include <syscom/page_map.h>
 #include <syscom/phys_allocator.h>

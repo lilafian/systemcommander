@@ -1,3 +1,7 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later
+ * Defines functions for formatting strings.
+ * Copyright (C) 2026 lilaf */
+
 #include <stdint.h>
 #include <syscom/fmt.h>
 #include <syscom/string.h>

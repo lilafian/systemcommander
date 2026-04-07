@@ -1,3 +1,7 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later
+ * Declares structures and functions for handling interrupts/exceptions.
+ * Copyright (C) 2026 lilaf */
+
 #pragma once
 #include <stdint.h>
 #include <syscom/idt.h>

@@ -1,3 +1,7 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later
+ * Defines a function for getting ACPI info.
+ * Copyright (C) 2026 lilaf */
+
 #include <syscom/acpi.h>
 #include <syscom/page_map.h>
 

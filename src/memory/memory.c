@@ -1,3 +1,8 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later
+ * Defines a function for getting the memory size.
+ * Copyright (C) 2026 lilaf */
+
+
 #include <syscom/memory.h>
 
 uint64_t get_memory_size(struct limine_memmap_response *map) {

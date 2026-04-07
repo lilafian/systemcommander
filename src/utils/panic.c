@@ -1,3 +1,7 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later
+ * Defines functions for panicking the kernel.
+ * Copyright (C) 2026 lilaf */
+
 #include <syscom/panic.h>
 #include <syscom/log.h>
 #include <syscom/fmt.h>

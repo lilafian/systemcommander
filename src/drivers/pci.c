@@ -1,3 +1,7 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later
+ * Defines functions for getting PCI info and finding PCI devices
+ * Copyright (C) 2026 lilaf */
+
 #include <syscom/pci.h>
 #include <syscom/acpi.h>
 #include <syscom/page_map.h>

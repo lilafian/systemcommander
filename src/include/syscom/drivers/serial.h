@@ -1,3 +1,7 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later
+ * Declares functions and constants for serial communication.
+ * Copyright (C) 2026 lilaf */
+
 #pragma once
 
 #define COM1 0x3F8

@@ -1,3 +1,7 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later
+ * Declares functions for loading and using the GDT.
+ * Copyright (C) 2026 lilaf */
+
 #pragma once
 
 #include <stdint.h>

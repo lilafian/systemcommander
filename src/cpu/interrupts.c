@@ -1,3 +1,7 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later
+ * Defines functions for handling faults/exceptions and registering them.
+ * Copyright (C) 2026 lilaf */
+
 #include <syscom/interrupts.h>
 #include <syscom/panic.h>
 #include <syscom/string.h>
