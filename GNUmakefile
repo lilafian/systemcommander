@@ -131,27 +131,27 @@ vmprepare:
 	sudo cp $(OVMF_SYS_PATH)/OVMF_VARS.4m.fd ovmf
 	sudo chmod a+rwx ovmf/OVMF_VARS.4m.fd
 
-.PHONY: qemutest
-qemutest:
+.PHONY: qemu
+qemu:
 	qemu-system-x86_64 \
 		-serial stdio \
 		$(QEMUFLAGS)
 
-.PHONY: qemutest-nographic
-qemutest-nographic:
+.PHONY: qemu-nographic
+qemu-nographic:
 	qemu-system-x86_64 \
 		-nographic \
 		$(QEMUFLAGS)
 
-.PHONY: qemutest-gdb
-qemutest-gdb:
+.PHONY: qemu-gdb
+qemu-gdb:
 	qemu-system-x86_64 \
 		-s -S \
 		-serial stdio \
 		$(QEMUFLAGS)
 
-.PHONY: qemutest-gdb-nographic
-qemutest-gdb-nographic:
+.PHONY: qemu-gdb-nographic
+qemu-gdb-nographic:
 	qemu-system-x86_64 \
 		-nographic \
 		-s -S \
