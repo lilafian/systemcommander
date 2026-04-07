@@ -4,7 +4,7 @@
 
 #include <syscom/log.h>
 #include <syscom/fmt.h>
-#include <syscom/serial.h>
+#include <syscom/drivers/serial.h>
 
 console *log_console;
 uint8_t log_mode;

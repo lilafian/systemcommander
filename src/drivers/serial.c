@@ -2,7 +2,7 @@
  * Defines functions for sending/receiving data through a serial device.
  * Copyright (C) 2026 lilaf */
 
-#include <syscom/serial.h>
+#include <syscom/drivers/serial.h>
 #include <syscom/ports.h>
 
 void serial_enable(int device) {

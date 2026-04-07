@@ -11,7 +11,7 @@
 #include <syscom/log.h>
 #include <syscom/memory.h>
 #include <syscom/phys_allocator.h>
-#include <syscom/serial.h>
+#include <syscom/drivers/serial.h>
 #include <syscom/page_map.h>
 #include <syscom/heap.h>
 #include <syscom/panic.h>
