@@ -152,8 +152,7 @@ bool ahci_read(ahci_port *port, uint64_t start_sector, uint32_t count, void *buf
 }
 
 bool ahci_read_virt(ahci_port *port, uint64_t start_sector, uint32_t count, void *buffer) {
-        if (count % 2 != 0) count++;
-        port->buffer = request_pages(count / 2);
+        port->buffer = request_pages(count % 2 == 0 ? count : count + 1);
         if (!port->buffer) return false;
         map_virtual_memory(kernel_pml4, (uint64_t)port->buffer, (uint64_t)port->buffer, PAGE_RW);
         memset(port->buffer, 0, count * 512);

@@ -20,6 +20,7 @@
 #include <syscom/acpi.h>
 #include <syscom/pci.h>
 #include <syscom/drivers/ahci.h>
+#include <syscom/gpt.h>
 
 __attribute__((used, section(".limine_requests")))
 static volatile uint64_t limine_base_revision[] = LIMINE_BASE_REVISION(6);
@@ -176,6 +177,30 @@ void kenter() {
                 }
         }
         if (!ahci_driver) panic("[init:kenter] Failed to find AHCI driver\nOther types of disk drivers are not available yet");
+
+        ahci_port *best_port;
+        for (int i = 0; i < ahci_driver->port_count; i++) {
+                ahci_port *port = ahci_driver->ports[i];
+                if (is_gpt(port)) {
+                        best_port = port;
+                        break;
+                }
+        }
+        if (!best_port) panic("[init:kenter] No GPT disks found!\nMBR is not supported at this time");
+
+        gpt_header *best_port_header = malloc(512);
+        bool read_success = ahci_read_virt(best_port, 1, 1, best_port_header);
+        if (!read_success) panic("[init:kenter] Unable to read GPT header at LBA 1");
+
+        gpt_partition_entry *partitions = malloc(sizeof(gpt_partition_entry) * best_port_header->entry_count);
+        read_success = ahci_read_virt(best_port, 2, 1, partitions);
+        if (!read_success) panic("[init:kenter] Unable to read partition table at LBA 2");
+
+        for (uint32_t i = 0; i < best_port_header->entry_count; i++) {
+                if (gpt_is_unused_partition(&partitions[i])) continue;
+                size_t size = (partitions[i].end_sector * 512) - (partitions[i].start_sector * 512);
+                logf("[init:kenter] Partition %d is %d bytes (%d KiB, %d MiB)\n", i + 1, size, size / 1024, size / 1024 / 1024);
+        }
 
         halt();
 }
