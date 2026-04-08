@@ -140,6 +140,7 @@ qemu:
 .PHONY: qemu-nographic
 qemu-nographic:
 	qemu-system-x86_64 \
+		-vga none \
 		-nographic \
 		$(QEMUFLAGS)
 
@@ -153,6 +154,7 @@ qemu-gdb:
 .PHONY: qemu-gdb-nographic
 qemu-gdb-nographic:
 	qemu-system-x86_64 \
+		-vga none \
 		-nographic \
 		-s -S \
 		$(QEMUFLAGS)
