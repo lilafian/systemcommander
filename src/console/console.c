@@ -20,11 +20,11 @@ void console_init(console *con, struct limine_framebuffer *framebuffer, psf2_hea
         memset(con->buf, 0, CONSOLE_BUF_SIZE);
 }
 
-void console_write(console *con, const char *str) {
+void console_write(console *con, char *str) {
         size_t to_copy = strlen(str);
 
         if (con->length + to_copy + 1 > CONSOLE_BUF_SIZE) {
-                size_t overflow = (con->length + to_copy + 1) - CONSOLE_BUF_SIZE;
+                int overflow = (con->length + to_copy + 1) - CONSOLE_BUF_SIZE;
 
                 if (overflow > con->length) {
                         overflow = con->length;
@@ -39,7 +39,7 @@ void console_write(console *con, const char *str) {
 
         int usable_height = con->framebuffer->height - (con->framebuffer->height % con->font->height);
         int max_lines = usable_height / con->font->height;
-        for (int i = 0; i < to_copy; i++) {
+        for (size_t i = 0; i < to_copy; i++) {
                 if (str[i] == '\n') con->lines++;
         }
         if (con->lines > max_lines) {

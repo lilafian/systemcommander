@@ -22,5 +22,5 @@ typedef struct console {
 } console;
 
 void console_init(console *con, struct limine_framebuffer *framebuffer, psf2_header_t *font, uint32_t fg_color, uint32_t bg_color);
-void console_write(console *con, const char *str);
+void console_write(console *con, char *str);
 void console_clear(console *con);

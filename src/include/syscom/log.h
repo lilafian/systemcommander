@@ -13,5 +13,5 @@
 
 void set_log_console(console *console);
 void set_log_mode(uint8_t mode);
-void log(const char *msg);
+void log(char *msg);
 void logf(const char *fmt, ...);

@@ -160,6 +160,7 @@ const char* pci_get_subclass_name(uint8_t class_code, uint8_t subclass_code) {
                                 case 0x00:
                                         return "VGA Compatible Controller";
                         }
+                        break;
                 case 0x06:
                         return pci_get_bridge_device_subclass_name(subclass_code);
                 case 0x0C:
@@ -181,7 +182,9 @@ const char* pci_get_program_interface_name(uint8_t class_code, uint8_t subclass_
                                                 case 0x02:
                                                         return "Serial Storage Bus";
                                         }
+                                        break;
                         }
+                        break;
                 case 0x03:
                         switch (subclass_code) {
                                 case 0x00:
@@ -191,7 +194,9 @@ const char* pci_get_program_interface_name(uint8_t class_code, uint8_t subclass_
                                                 case 0x01:
                                                         return "8514-Compatible Controller";
                                         }
+                                        break;
                         }
+                        break;
                 case 0x0C:
                         switch (subclass_code) {
                                 case 0x03:
@@ -209,7 +214,9 @@ const char* pci_get_program_interface_name(uint8_t class_code, uint8_t subclass_
                                                 case 0xFE:
                                                         return "USB Device (Not a Host Controller)";
                                         }
-                        }    
+                                        break;
+                        }
+                        break;
         }
         return itoa(program_interface, 16);
 }

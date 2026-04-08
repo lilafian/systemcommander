@@ -17,7 +17,7 @@ void set_log_console(console *console) {
         log_console = console;
 }
 
-void log(const char *msg) {
+void log(char *msg) {
         if (log_mode == LOG_MODE_FRAMEBUFFER_SERIAL) {
                 console_write(log_console, msg);
         }
