@@ -38,3 +38,5 @@ typedef struct gpt_partition_entry {
 
 bool is_gpt(ahci_port *disk);
 bool gpt_is_unused_partition(gpt_partition_entry *partition);
+
+bool gpt_read_partition(ahci_port *disk, gpt_partition_entry *partition, uint64_t start_sector, uint32_t count, void *buffer);

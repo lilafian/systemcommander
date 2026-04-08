@@ -18,3 +18,8 @@ bool is_gpt(ahci_port *disk) {
 bool gpt_is_unused_partition(gpt_partition_entry *partition) {
         return (strncmp(partition->type_guid, "\0", 16) == 0);
 }
+
+bool gpt_read_partition(ahci_port *disk, gpt_partition_entry *partition, uint64_t start_sector, uint32_t count, void *buffer) {
+        uint64_t start = partition->start_sector + start_sector;
+        return ahci_read_virt(disk, start, count, buffer);
+}
