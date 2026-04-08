@@ -82,6 +82,24 @@ void *request_page() {
         return NULL;
 }
 
+// TODO: Optimize also
+// THIS FUNCTION IS EXTREMELY SLOW!!!! Use request_page unless actually needing contiguous memory space.
+void *request_pages(int count) {
+        for (uint64_t index = 0; index < page_bitmap.size * 8; index++) {
+                bool usable = true;
+                for (int fwd = 0; fwd < count; fwd++) {
+                        if (bm_get(&page_bitmap, index + fwd) == false) continue;
+                        usable = false;
+                        break;
+                }
+
+                if (!usable) continue;
+
+                lock_pages((void *)(index * 4096), count);
+                return (void *)(index * 4096);
+        }
+}
+
 void read_memory_map(struct limine_memmap_response *map) {
         if (initialized) return;
         initialized = true;
