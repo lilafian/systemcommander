@@ -19,6 +19,7 @@
 #include <syscom/interrupts.h>
 #include <syscom/acpi.h>
 #include <syscom/pci.h>
+#include <syscom/drivers/ahci.h>
 
 __attribute__((used, section(".limine_requests")))
 static volatile uint64_t limine_base_revision[] = LIMINE_BASE_REVISION(6);
@@ -111,7 +112,7 @@ void kenter() {
         logf("[init:kenter] Detected %d MiB of memory\n", get_memory_size(memmap_request.response) / 1024 / 1024);
         
         read_memory_map(memmap_request.response);
-        logf("[init:kenter] Free: %d KiB\n         Used: %d KiB\n         Reserved: %d KiB\n", get_free_memory() / 1024, get_used_memory() / 1024, get_reserved_memory() / 1024);
+        logf("[init:kenter] Free: %d KiB\n              Used: %d KiB\n              Reserved: %d KiB\n", get_free_memory() / 1024, get_used_memory() / 1024, get_reserved_memory() / 1024);
 
         gdt_descriptor gdt_desc;
         gdt_desc.size = sizeof(gdt) - 1;
@@ -166,6 +167,15 @@ void kenter() {
                 panic("[init:kenter] Failed to find MCFG table");
         }
         pci_enumerate(mcfg);
+
+        ahci_driver_info *ahci_driver;
+        for (int i = 0; i < pci_driver_count; i++) {
+                pci_driver driver = pci_drivers[i];
+                if (driver.type == PCI_DRIVER_TYPE_AHCI) {
+                        ahci_driver = driver.info;
+                }
+        }
+        if (!ahci_driver) panic("[init:kenter] Failed to find AHCI driver\nOther types of disk drivers are not available yet");
 
         halt();
 }

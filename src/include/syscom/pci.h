@@ -7,6 +7,11 @@
 #include <stdint.h>
 #include <syscom/acpi.h>
 
+typedef uint16_t pci_driver_type;
+#define PCI_DRIVER_TYPE_AHCI 0x0001
+
+#define PCI_MAX_DRIVERS 512
+
 typedef struct pci_device_header {
     uint16_t vendor_id;
     uint16_t device_id;
@@ -39,4 +44,12 @@ typedef struct pci_general_device {
         uint8_t max_latency;
 }__attribute__((packed)) pci_general_device;
 
+typedef struct pci_driver {
+        pci_driver_type type;
+        void *info;
+} pci_driver;
+
 void pci_enumerate(mcfg_header* mcfg);
+
+extern pci_driver pci_drivers[];
+extern int pci_driver_count;

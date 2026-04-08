@@ -10,6 +10,9 @@
 
 #include <syscom/drivers/ahci.h>
 
+pci_driver pci_drivers[PCI_MAX_DRIVERS];
+int pci_driver_count = 0;
+
 const char* PCI_DEVICE_CLASSES[] = {
         "Unclassified",
         "Mass Storage Controller",
@@ -233,7 +236,13 @@ void function_enumerate(uint64_t device_address, uint64_t function) {
                                 case 0x06: // SATA
                                         switch (device_header->program_interface) {
                                                 case 0x01: // AHCI 1.0
-                                                        ahci_init(device_header);
+                                                        ahci_driver_info *ahci_info = ahci_init(device_header);
+                                                        pci_driver ahci_driver = {
+                                                                .type = PCI_DRIVER_TYPE_AHCI,
+                                                                .info = ahci_info
+                                                        };
+                                                        pci_drivers[pci_driver_count] = ahci_driver;
+                                                        pci_driver_count++;
                                                         break;
                                         }
                                         break;

@@ -98,6 +98,8 @@ void *request_pages(int count) {
                 lock_pages((void *)(index * 4096), count);
                 return (void *)(index * 4096);
         }
+        
+        return NULL;
 }
 
 void read_memory_map(struct limine_memmap_response *map) {

@@ -156,15 +156,16 @@ bool ahci_read_virt(ahci_port *port, uint64_t start_sector, uint32_t count, void
         port->buffer = request_pages(count / 2);
         if (!port->buffer) return false;
         map_virtual_memory(kernel_pml4, (uint64_t)port->buffer, (uint64_t)port->buffer, PAGE_RW);
+        memset(port->buffer, 0, count * 512);
 
         bool success = ahci_read(port, start_sector, count, port->buffer);
         if (!success) return false;
         
-        memcpy(port->buffer, buffer, count * 512);
+        memcpy(buffer, port->buffer, count * 512);
         return true;
 }
 
-void ahci_init(pci_device_header *pci_base) {
+ahci_driver_info *ahci_init(pci_device_header *pci_base) {
         logf("[ahci:ahci_init] Initializing AHCI driver at PCI base 0x%x\n", pci_base);
 
         uint64_t abar_phys = (uint64_t)((pci_general_device *)pci_base)->bar[5];
@@ -181,4 +182,6 @@ void ahci_init(pci_device_header *pci_base) {
                 ahci_port *port = info->ports[i];
                 ahci_configure_port(port);
         }
+
+        return info;
 }

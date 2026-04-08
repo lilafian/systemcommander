@@ -14,6 +14,7 @@ void lock_page(void *addr);
 void free_pages(void *addr, uint64_t count);
 void lock_pages(void *addr, uint64_t count);
 void *request_page();
+void *request_pages(int count);
 
 uint64_t get_free_memory();
 uint64_t get_used_memory();

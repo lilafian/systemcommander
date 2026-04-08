@@ -156,7 +156,7 @@ typedef struct ahci_driver_info {
         uint8_t port_count;
 } ahci_driver_info;
 
-void ahci_init(pci_device_header *pci_base);
+ahci_driver_info *ahci_init(pci_device_header *pci_base);
 hba_port_type ahci_get_port_type(hba_port *port);
 
 void ahci_port_start_cmd(ahci_port *port);
