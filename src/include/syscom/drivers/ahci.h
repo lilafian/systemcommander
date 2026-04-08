@@ -163,3 +163,4 @@ void ahci_port_start_cmd(ahci_port *port);
 void ahci_port_stop_cmd(ahci_port *port);
 
 bool ahci_read(ahci_port *port, uint64_t start_sector, uint32_t count, void *buffer);
+bool ahci_read_virt(ahci_port *port, uint64_t start_sector, uint32_t count, void *buffer);
