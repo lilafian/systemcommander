@@ -14,4 +14,5 @@
 void set_log_console(console *console);
 void set_log_mode(uint8_t mode);
 void log(char *msg);
+void logn(char *msg, int count, char end);
 void logf(const char *fmt, ...);

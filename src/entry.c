@@ -21,6 +21,7 @@
 #include <syscom/pci.h>
 #include <syscom/drivers/ahci.h>
 #include <syscom/gpt.h>
+#include <syscom/fs/fat.h>
 
 __attribute__((used, section(".limine_requests")))
 static volatile uint64_t limine_base_revision[] = LIMINE_BASE_REVISION(6);
@@ -200,6 +201,11 @@ void kenter() {
                 if (gpt_is_unused_partition(&partitions[i])) continue;
                 size_t size = (partitions[i].end_sector * 512) - (partitions[i].start_sector * 512);
                 logf("[init:kenter] Partition %d is %d bytes (%d KiB, %d MiB)\n", i + 1, size, size / 1024, size / 1024 / 1024);
+
+                fat_bios_param_block *bpb = malloc(sizeof(fat_bios_param_block));
+                read_success = gpt_read_partition(best_port, &partitions[i], 0, 1, bpb);
+                if (!read_success) panic("[init:kenter] Unable to read FAT BPB from disk");
+                logn(bpb->oem_id, 8, '\n');
         }
 
         halt();

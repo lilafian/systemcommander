@@ -27,6 +27,13 @@ void log(char *msg) {
         }
 }
 
+void logn(char *msg, int count, char end) {
+        for (int i = 0; i < count; i++) {
+                logf("%c", msg[i]);
+        }
+        logf("%c", end);
+}
+
 void logf(const char *fmt, ...) {
         va_list args;
         va_start(args, fmt);
