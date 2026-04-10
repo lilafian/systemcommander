@@ -96,7 +96,7 @@ typedef struct fat_file {
         uint16_t modification_date;
         uint16_t first_cluster_lo;
         uint32_t size;
-} fat_file;
+}__attribute__((packed)) fat_file;
 
 typedef struct fat_long_filename {
         uint8_t order;

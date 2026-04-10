@@ -87,6 +87,7 @@ uint32_t fat32_next_cluster(fs_mountpoint *mp, uint32_t cluster) {
         
 fs_file *fat_open_fat_file(fat_file *file, fs_flags flags, fs_mountpoint *parent_mount) {
         fs_file *fsfile = malloc(sizeof(fs_file));
+        memset(fsfile, 0, sizeof(fs_file));
 
         fsfile->mode |= (file->attributes & FAT_FILE_ATTRIB_DIRECTORY ? S_FDIR : 0);
         fsfile->mode |= (file->attributes & FAT_FILE_ATTRIB_HIDDEN ? S_FHDN : 0);
@@ -240,7 +241,36 @@ size_t fat32_read(fs_file *file, void *buffer, size_t size) {
 }
 
 size_t fat32_read_file(fs_file *file, void *buffer, size_t size) {
+        fs_mountpoint *mountpoint = file->parent_mount;
+        fat_volume *volume = mountpoint->driver_data;
+        fat32_extended_boot_sector ext = *(fat32_extended_boot_sector*)volume->bpb->extended;
 
+        if (size > file->size) size = file->size;
+        
+        uint16_t cluster_lo = ((fat_file *)file->driver_data)->first_cluster_lo;
+        uint16_t cluster_up = ((fat_file *)file->driver_data)->first_cluster_up;
+        uint32_t cluster = (uint32_t)cluster_lo + ((uint32_t)cluster_up << 16);
+        
+        size_t written = 0;
+
+        while (cluster < 0x0FFFFFF7 && written < size) {
+                uint32_t fat_size = volume->bpb->sectors_per_fat == 0 ? ext.sectors_per_fat : volume->bpb->sectors_per_fat;
+                uint32_t first_data_sector = volume->bpb->reserved_sectors + (volume->bpb->fats * fat_size);
+                uint32_t first_sector = ((cluster - 2) * volume->bpb->sectors_per_cluster) + first_data_sector;
+                size_t bytes_per_cluster = volume->bpb->sectors_per_cluster * 512;
+                char *read_buf = malloc(bytes_per_cluster);
+                bool read_success = gpt_read_partition(mountpoint->partition->ahci, mountpoint->partition->entry, first_sector, volume->bpb->sectors_per_cluster, read_buf);
+                if (!read_success) return 0;
+
+                size_t read_size = (size - written < bytes_per_cluster) ? size - written : bytes_per_cluster;
+
+                memcpy(buffer + written, read_buf, read_size);
+                written += read_size;
+
+                cluster = fat32_next_cluster(mountpoint, cluster);
+        }
+
+        return written;
 }
 
 size_t fat32_read_dir(fs_file *file, fs_file_info **buffer, size_t size) {
