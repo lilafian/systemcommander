@@ -49,6 +49,8 @@
 
 #define UNMOUNT_ERR_NOT_MOUNTED 1
 
+typedef uint64_t timestamp; // Time in centiseconds since 1/1/1970
+
 typedef struct fs_path {
         char **components;
         size_t depth;
@@ -80,11 +82,9 @@ typedef struct fs_file {
 } fs_file;
 
 typedef struct fs_file_info {
-        char name[256];
-        uint64_t creation_date;
-        uint64_t creation_time;
-        uint64_t modification_date;
-        uint64_t modification_time;
+        char *name;
+        timestamp creation_time;
+        timestamp modification_time;
         fs_mode mode;
         uint32_t size;
 } fs_file_info;
@@ -111,5 +111,5 @@ fs_mountpoint *resolve_mountpoint(fs_path *path);
 fs_path *strip_mountpoint(fs_path *path, fs_mountpoint *mountpoint);
 
 fs_file *fopen(fs_path *path, fs_flags flags);
-size_t fread(fs_file *file, void *buffer, size_t size); // when file is a dir, will return an array of fs_file_info structs into the buffer
+size_t fread(fs_file *file, void *buffer, size_t size); // when file is a dir, will return an array of fs_file_info *s into the buffer
 bool fclose(fs_file *file);

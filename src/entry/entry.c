@@ -206,9 +206,13 @@ void kenter() {
 
                 gpt_register_partition(best_port, &partitions[i]);
                 mount(&gpt_partitions[0], &root_path, &fat32_fs_handler);
-                fs_path *test_file_path = create_path("/testinglongnameyay.txt", 1);
-                fs_file *test_file = fopen(test_file_path, O_RDONLY);
-                if (test_file) logf("[init:kenter] Test file is %d bytes", test_file->size);
+                fs_file *root = fopen(&root_path, O_RDONLY);
+                if (!root) break;
+                fs_file_info **root_entries = malloc(16 * sizeof(fs_file_info *));
+                size_t entries_read = fread(root, root_entries, 16 * sizeof(fs_file_info *)) / sizeof(fs_file_info *);
+                for (int i = 0; i < entries_read; i++)  {
+                        logf("%s - %d - %d - %d\n", root_entries[i]->name, root_entries[i]->creation_time, root_entries[i]->modification_time, root_entries[i]->size);
+                }
         }
 
         halt();

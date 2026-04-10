@@ -147,5 +147,8 @@ fs_file *fopen(fs_path *path, fs_flags flags) {
         return mountpoint->handler->open(mountpoint, new_path, flags);
 }
 
-size_t fread(fs_file *file, void *buffer, size_t size); // when file is a dir, will return an array of fs_file_info structs into the buffer
+size_t fread(fs_file *file, void *buffer, size_t size) { // when file is a dir, will return an array of fs_file_info structs into the buffer
+        return file->parent_mount->handler->read(file, buffer, size);
+}
+
 bool fclose(fs_file *file);

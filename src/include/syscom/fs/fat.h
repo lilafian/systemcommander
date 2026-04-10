@@ -75,12 +75,12 @@ typedef struct fat32_fsinfo {
         uint32_t start_available_search;
 } fat32_fsinfo;
 
-#define FAT_TIME_HOUR 0b1111100000000000
-#define FAT_TIME_MIN 0b0000011111100000
-#define FAT_TIME_SEC 0b0000000000011111 // MULTIPLY BY 2
-#define FAT_DATE_YEAR 0b1111111000000000
-#define FAT_DATE_MONTH 0b0000000111100000
-#define FAT_DATE_DAY 0b0000000000011111
+#define FAT_TIME_HOUR(time) (((time) & 0b1111100000000000) >> 11)
+#define FAT_TIME_MIN(time) (((time) & 0b0000011111100000) >> 5)
+#define FAT_TIME_SEC(time) (((time) & 0b0000000000011111) * 2)
+#define FAT_DATE_YEAR(date) ((((date) & 0b1111111000000000) >> 9) + 1980)
+#define FAT_DATE_MONTH(date) (((date) & 0b0000000111100000) >> 5)
+#define FAT_DATE_DAY(date) ((date) & 0b0000000000011111)
 
 typedef struct fat_file {
         char name[8];
@@ -121,5 +121,5 @@ int fat32_unmount(fs_mountpoint *mountpoint);
 fs_file *fat32_open(fs_mountpoint *, fs_path *path, fs_flags flags);
 size_t fat32_read(fs_file *file, void *buffer, size_t size);
 size_t fat32_read_file(fs_file *file, void *buffer, size_t size);
-size_t fat32_read_dir(fs_file *file, void *buffer, size_t size);
+size_t fat32_read_dir(fs_file *file, fs_file_info **buffer, size_t size);
 bool fat32_close(fs_file *file);
