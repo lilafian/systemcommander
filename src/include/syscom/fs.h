@@ -2,12 +2,12 @@
  * Declares functions and structures for interacting with filesystems.
  * Copyright (C) 2026 lilaf */
 
-/* This is a draft! 
- * Nothing here is likely to be in the exact same form */
-
 #pragma once
 
-#define FS_PATH_DEFAULT_MAX_DEPTH 255
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <syscom/gpt.h>
 
 #define FS_TYPE_NONE 0
 #define FS_TYPE_FAT32 1
@@ -37,27 +37,79 @@
 #define O_TMPFILE (__O_TMPFILE | O_DIRECTORY)
 #define O_NDELAY O_NONBLOCK
 
-typedef char **fs_path;
-typedef uint8_t fs_mode;
+#define S_FMT 0170000
+#define S_FREG 0100000
+#define S_FDIR 0040000
+#define S_FHDN 0001000 // NOT unix
+#define S_RUSR 0400
+#define S_WUSR 0200
+#define S_XUSR 0100
+
+#define FS_MAX_MOUNTED_FILESYSTEMS 256
+
+#define UNMOUNT_ERR_NOT_MOUNTED 1
+
+typedef struct fs_path {
+        char **components;
+        size_t depth;
+} fs_path;
+
+typedef uint16_t fs_mode;
+typedef uint32_t fs_flags;
 typedef uint16_t fs_type;
 
 typedef struct fs_mountpoint {
-        fs_path path;
-        struct fs_handler handler;
+        fs_path *path;
+        gpt_partition *partition;
+        struct fs_handler *handler;
+        void *driver_data;
 } fs_mountpoint;
 
+typedef struct fs_active_mountpoints_info {
+        fs_mountpoint **mountpoints;
+        int active_mountpoint_count;
+} fs_active_mountpoints_info;
+
 typedef struct fs_file {
-        fs_path path;
-        fs_path relative_path;
         fs_mode mode;
-        fs_mountpoint parent_mount;
+        fs_flags flags;
+        fs_mountpoint *parent_mount;
+        uint32_t seek;
+        uint32_t size;
+        void *driver_data;
 } fs_file;
+
+typedef struct fs_file_info {
+        char name[256];
+        uint64_t creation_date;
+        uint64_t creation_time;
+        uint64_t modification_date;
+        uint64_t modification_time;
+        fs_mode mode;
+        uint32_t size;
+} fs_file_info;
 
 typedef struct fs_handler {
         fs_type type;
-        bool (*open)(fs_path);
-        bool (*read)(fs_file);
-        bool (*close)(fs_file);
+        fs_mountpoint *(*mount)(gpt_partition *, fs_path *);
+        int (*unmount)(fs_mountpoint *mountpoint);
+        fs_file *(*open)(fs_mountpoint *, fs_path *, fs_flags);
+        size_t (*read)(fs_file *, void *, size_t);
+        bool (*close)(fs_file *);
 } fs_handler;
 
-void create_path(char *in, fs_path *out, int max_depth);
+extern fs_path root_path;
+
+fs_path *create_path(char *in, int depth);
+void free_path(fs_path *path);
+bool paths_equal(fs_path *p1, fs_path *p2);
+
+fs_mountpoint *mount(gpt_partition *partition, fs_path *path, fs_handler *handler);
+int unmount(fs_path *path);
+fs_active_mountpoints_info *get_mount_points();
+fs_mountpoint *resolve_mountpoint(fs_path *path);
+fs_path *strip_mountpoint(fs_path *path, fs_mountpoint *mountpoint);
+
+fs_file *fopen(fs_path *path, fs_flags flags);
+size_t fread(fs_file *file, void *buffer, size_t size); // when file is a dir, will return an array of fs_file_info structs into the buffer
+bool fclose(fs_file *file);

@@ -22,6 +22,7 @@
 #include <syscom/drivers/ahci.h>
 #include <syscom/gpt.h>
 #include <syscom/fs/fat.h>
+#include <syscom/fs.h>
 
 __attribute__((used, section(".limine_requests")))
 static volatile uint64_t limine_base_revision[] = LIMINE_BASE_REVISION(6);
@@ -197,15 +198,17 @@ void kenter() {
         read_success = ahci_read_virt(best_port, 2, 1, partitions);
         if (!read_success) panic("[init:kenter] Unable to read partition table at LBA 2");
 
+        /* THIS DOES NOT WORK WITH >1 PARTITION. IT IS EARLY TEST CODE. DO NOT KEEP!!! */
         for (uint32_t i = 0; i < best_port_header->entry_count; i++) {
                 if (gpt_is_unused_partition(&partitions[i])) continue;
                 size_t size = (partitions[i].end_sector * 512) - (partitions[i].start_sector * 512);
                 logf("[init:kenter] Partition %d is %d bytes (%d KiB, %d MiB)\n", i + 1, size, size / 1024, size / 1024 / 1024);
 
-                fat_bios_param_block *bpb = malloc(sizeof(fat_bios_param_block));
-                read_success = gpt_read_partition(best_port, &partitions[i], 0, 1, bpb);
-                if (!read_success) panic("[init:kenter] Unable to read FAT BPB from disk");
-                logn(bpb->oem_id, 8, '\n');
+                gpt_register_partition(best_port, &partitions[i]);
+                mount(&gpt_partitions[0], &root_path, &fat32_fs_handler);
+                fs_path *test_file_path = create_path("/testinglongnameyay.txt", 1);
+                fs_file *test_file = fopen(test_file_path, O_RDONLY);
+                if (test_file) logf("[init:kenter] Test file is %d bytes", test_file->size);
         }
 
         halt();

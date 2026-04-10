@@ -6,6 +6,9 @@
 #include <syscom/string.h>
 #include <syscom/heap.h>
 
+gpt_partition gpt_partitions[255];
+int gpt_partition_count = 0;
+
 bool is_gpt(ahci_port *disk) {
         gpt_header *header = (gpt_header *)malloc(512);
         bool read_success = ahci_read_virt(disk, 1, 1, header);
@@ -22,4 +25,17 @@ bool gpt_is_unused_partition(gpt_partition_entry *partition) {
 bool gpt_read_partition(ahci_port *disk, gpt_partition_entry *partition, uint64_t start_sector, uint32_t count, void *buffer) {
         uint64_t start = partition->start_sector + start_sector;
         return ahci_read_virt(disk, start, count, buffer);
+}
+
+void gpt_register_partition(ahci_port *ahci, gpt_partition_entry *partition) {
+        if (gpt_partition_count >= 255) return;
+
+        gpt_partition part_struct = {
+                .ahci = ahci,
+                .entry = partition
+        };
+
+        gpt_partitions[gpt_partition_count] = part_struct;
+
+        gpt_partition_count++;
 }

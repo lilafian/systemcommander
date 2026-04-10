@@ -36,7 +36,16 @@ typedef struct gpt_partition_entry {
         char16 name[36];
 } gpt_partition_entry;
 
+typedef struct gpt_partition {
+        ahci_port *ahci;
+        gpt_partition_entry *entry;
+} gpt_partition;
+
 bool is_gpt(ahci_port *disk);
 bool gpt_is_unused_partition(gpt_partition_entry *partition);
 
 bool gpt_read_partition(ahci_port *disk, gpt_partition_entry *partition, uint64_t start_sector, uint32_t count, void *buffer);
+void gpt_register_partition(ahci_port *ahci, gpt_partition_entry *partition);
+
+extern gpt_partition gpt_partitions[];
+extern int gpt_partition_count;
