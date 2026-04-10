@@ -374,5 +374,7 @@ size_t fat32_read_dir(fs_file *file, fs_file_info **buffer, size_t size) {
 }
 
 bool fat32_close(fs_file *file) {
-
+        free(file->driver_data);
+        free(file);
+        return true;
 }

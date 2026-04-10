@@ -151,4 +151,6 @@ size_t fread(fs_file *file, void *buffer, size_t size) { // when file is a dir, 
         return file->parent_mount->handler->read(file, buffer, size);
 }
 
-bool fclose(fs_file *file);
+bool fclose(fs_file *file) {
+        return file->parent_mount->handler->close(file);
+}
