@@ -206,6 +206,14 @@ void kenter() {
 
                 gpt_register_partition(best_port, &partitions[i]);
                 mount(&gpt_partitions[0], &root_path, &fat32_fs_handler);
+
+                fs_path *write_test_path = create_path("/writeme.txt", 1);
+                fs_file *write_test_file = fopen(write_test_path, O_RDWR);
+                size_t bytes_written = fwrite(write_test_file, "Hello, world!", 14);
+                logf("Wrote %d bytes\n", bytes_written);
+                char *readbuf = malloc(14);
+                fread(write_test_file, readbuf, 14);
+                logn(readbuf, 14, '\n');
         }
 
         halt();

@@ -5,6 +5,7 @@
 #include <syscom/gpt.h>
 #include <syscom/string.h>
 #include <syscom/heap.h>
+#include <syscom/stdmemory.h>
 
 gpt_partition gpt_partitions[255];
 int gpt_partition_count = 0;
@@ -25,6 +26,30 @@ bool gpt_is_unused_partition(gpt_partition_entry *partition) {
 bool gpt_read_partition(ahci_port *disk, gpt_partition_entry *partition, uint64_t start_sector, uint32_t count, void *buffer) {
         uint64_t start = partition->start_sector + start_sector;
         return ahci_read_virt(disk, start, count, buffer);
+}
+
+bool gpt_write_partition(ahci_port *disk, gpt_partition_entry *partition, uint64_t start_sector, uint32_t count, void *buffer) {
+        uint64_t start = partition->start_sector + start_sector;
+        return ahci_write_virt(disk, start, count, buffer);
+}
+
+bool gpt_write_partition_offset(ahci_port *disk, gpt_partition_entry *partition, uint64_t start_sector, uint64_t byte_offset, uint32_t count, void *buffer, size_t write_size) {
+        if (byte_offset + write_size > 512 * count) return false;
+
+        uint64_t start = partition->start_sector + start_sector;
+
+        char *read = malloc(512 * count);
+        bool read_success = ahci_read_virt(disk, start, count, read);
+        if (!read_success) {
+                free(read);
+                return false;
+        }
+
+        memcpy(read + byte_offset, buffer, write_size);
+
+        bool write_status = ahci_write_virt(disk, start, count, read);
+        free(read);
+        return write_status;
 }
 
 void gpt_register_partition(ahci_port *ahci, gpt_partition_entry *partition) {

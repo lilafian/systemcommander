@@ -164,6 +164,71 @@ bool ahci_read_virt(ahci_port *port, uint64_t start_sector, uint32_t count, void
         return true;
 }
 
+bool ahci_write(ahci_port *port, uint64_t start_sector, uint32_t count, void *buffer) {
+        uint64_t spin = 0;
+        while ((port->hba->task_file_data & (ATA_DEVICE_BUSY | ATA_DEVICE_DRQ)) && spin < 1000000) {
+                spin++;
+        }
+
+        if (spin >= 1000000) return false;
+
+        uint32_t sector_lo = (uint32_t)start_sector;
+        uint32_t sector_up = (uint32_t)(start_sector >> 32);
+
+        port->hba->interrupt_status = (uint32_t)-1;
+
+        hba_command_header *command_header = (hba_command_header *)((uint64_t)port->hba->command_list_base_lo + ((uint64_t)port->hba->command_list_base_up << 32));
+        command_header->flags = (sizeof(fis_reg_h2d) / sizeof(uint32_t)) & HBA_CMD_CFL_MASK;
+        command_header->flags |= HBA_CMD_WRITE;
+        command_header->prdt_length = 1;
+
+        hba_command_table *command_table = (hba_command_table *)((uint64_t)command_header->cmd_table_base_lo + ((uint64_t)command_header->cmd_table_base_up << 32));
+        memset(command_table, 0, sizeof(hba_command_table) + (command_header->prdt_length - 1) * sizeof(hba_prdt_entry));
+
+        command_table->prdt_entries[0].data_base_lo = (uint32_t)(uint64_t)buffer;
+        command_table->prdt_entries[0].data_base_up = (uint32_t)((uint64_t)buffer >> 32);
+        command_table->prdt_entries[0].flags = ((count << 9) - 1) & HBA_PRDTE_BYTE_COUNT_MASK;
+        command_table->prdt_entries[0].flags |= HBA_PRDTE_INTERRUPT_ON_COMPLETION;
+        
+        fis_reg_h2d *cmd_fis = (fis_reg_h2d *)(&command_table->command_fis);
+        cmd_fis->fis_type = FIS_TYPE_REG_H2D;
+        cmd_fis->flags |= FIS_REG_H2D_COMMAND_CONTROL;
+        cmd_fis->command = ATA_CMD_WRITE_DMA_EX;
+
+        cmd_fis->lba0 = (uint8_t)sector_lo;
+        cmd_fis->lba1 = (uint8_t)(sector_lo >> 8);
+        cmd_fis->lba2 = (uint8_t)(sector_lo >> 16);
+        cmd_fis->lba3 = (uint8_t)sector_up;
+        cmd_fis->lba4 = (uint8_t)(sector_up >> 8);
+        cmd_fis->lba5 = (uint8_t)(sector_up >> 16);
+
+        cmd_fis->device_register = 1 << 6;
+
+        cmd_fis->count_lo = count & 0xFF;
+        cmd_fis->count_up = (count >> 8) & 0xFF;
+
+        port->hba->command_issue = 1;
+
+        while (true) {
+                if (port->hba->command_issue == 0) break;
+                if (port->hba->interrupt_status & HBA_PXIS_TFES) return false;
+        }
+
+        return true;
+}
+
+bool ahci_write_virt(ahci_port *port, uint64_t start_sector, uint32_t count, void *buffer) {
+        port->buffer = request_pages(count % 2 == 0 ? count : count + 1);
+        if (!port->buffer) return false;
+
+        map_virtual_memory(kernel_pml4, (uint64_t)port->buffer, (uint64_t)port->buffer, PAGE_RW);
+        memcpy(port->buffer, buffer, count * 512);
+
+        bool success = ahci_write(port, start_sector, count, port->buffer);
+        if (!success) return false;
+        return true;
+}
+
 ahci_driver_info *ahci_init(pci_device_header *pci_base) {
         logf("[ahci:ahci_init] Initializing AHCI driver at PCI base 0x%x\n", pci_base);
 

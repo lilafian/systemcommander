@@ -85,7 +85,7 @@ bootimg-efi:
 	mkdir -p build/img/boot
 	cp -v build/$(KBINOUTPUT) build/img/boot
 	cp -v assets/fonts/$(DEFFONTNAME).psf build/img/boot/deffont.psf
-	cp -v assets/testinglongnameyay.txt build/img/
+	cp -v assets/writeme.txt build/img/
 	mkdir -p build/img/boot/limine
 	cp -v limine.conf limine/limine-uefi-cd.bin build/img/boot/limine
 	mkdir -p build/img/EFI/BOOT

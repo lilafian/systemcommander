@@ -25,6 +25,7 @@ typedef uint8_t hba_port_type;
 #define SATA_SIGNATURE_PM 0x96690101
 
 #define ATA_CMD_READ_DMA_EX 0x25
+#define ATA_CMD_WRITE_DMA_EX 0x35
 
 #define ATA_DEVICE_BUSY 0x80
 #define ATA_DEVICE_DRQ 0x08
@@ -164,3 +165,5 @@ void ahci_port_stop_cmd(ahci_port *port);
 
 bool ahci_read(ahci_port *port, uint64_t start_sector, uint32_t count, void *buffer);
 bool ahci_read_virt(ahci_port *port, uint64_t start_sector, uint32_t count, void *buffer);
+bool ahci_write(ahci_port *port, uint64_t start_sector, uint32_t count, void *buffer);
+bool ahci_write_virt(ahci_port *port, uint64_t start_sector, uint32_t count, void *buffer);

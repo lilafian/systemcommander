@@ -45,6 +45,8 @@ bool is_gpt(ahci_port *disk);
 bool gpt_is_unused_partition(gpt_partition_entry *partition);
 
 bool gpt_read_partition(ahci_port *disk, gpt_partition_entry *partition, uint64_t start_sector, uint32_t count, void *buffer);
+bool gpt_write_partition(ahci_port *disk, gpt_partition_entry *partition, uint64_t start_sector, uint32_t count, void *buffer);
+bool gpt_write_partition_offset(ahci_port *disk, gpt_partition_entry *partition, uint64_t start_sector, uint64_t byte_offset, uint32_t count, void *buffer, size_t write_size);
 void gpt_register_partition(ahci_port *ahci, gpt_partition_entry *partition);
 
 extern gpt_partition gpt_partitions[];

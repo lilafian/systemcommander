@@ -15,6 +15,7 @@ fs_handler fat32_fs_handler = {
         .open = fat32_open,
         .close = fat32_close,
         .read = fat32_read,
+        .write = fat32_write,
         .stat = fat32_stat
 };
 
@@ -234,6 +235,12 @@ fs_file *fat32_open(fs_mountpoint *mountpoint, fs_path *path, fs_flags flags) {
         return fat_open_fat_file(file, flags, mountpoint);
 }
 
+bool fat32_close(fs_file *file) {
+        free(file->driver_data);
+        free(file);
+        return true;
+}
+
 size_t fat32_read(fs_file *file, void *buffer, size_t size) {
         if (file->mode & S_FDIR) {
                 return fat32_read_dir(file, (fs_file_info **)buffer, size);
@@ -374,10 +381,51 @@ size_t fat32_read_dir(fs_file *file, fs_file_info **buffer, size_t size) {
         return entries_written * sizeof(fs_file_info *);
 }
 
-bool fat32_close(fs_file *file) {
-        free(file->driver_data);
-        free(file);
-        return true;
+size_t fat32_write(fs_file *file, void *inbuf, size_t size) {
+        if (file->mode & S_FDIR) {
+                logf("[fs:fat32_write] <FATAL> Attempted to write to a directory\n");
+                return 0;
+        }
+
+        fs_mountpoint *mountpoint = file->parent_mount;
+        fat_volume *volume = mountpoint->driver_data;
+        fat32_extended_boot_sector ext = *(fat32_extended_boot_sector*)volume->bpb->extended;
+
+        if (size > file->size - file->seek) size = file->size - file->seek;
+        
+        uint16_t cluster_lo = ((fat_file *)file->driver_data)->first_cluster_lo;
+        uint16_t cluster_up = ((fat_file *)file->driver_data)->first_cluster_up;
+        uint32_t cluster = (uint32_t)cluster_lo + ((uint32_t)cluster_up << 16);
+        
+        size_t written = 0;
+
+        bool first_cluster = true;
+        while (cluster < 0x0FFFFFF7 && written < size) {
+                uint32_t fat_size = volume->bpb->sectors_per_fat == 0 ? ext.sectors_per_fat : volume->bpb->sectors_per_fat;
+                uint32_t first_data_sector = volume->bpb->reserved_sectors + (volume->bpb->fats * fat_size);
+                uint32_t first_sector = ((cluster - 2) * volume->bpb->sectors_per_cluster) + first_data_sector;
+
+                size_t bytes_per_cluster = volume->bpb->sectors_per_cluster * 512;
+
+                uint32_t bytes_skip = file->seek % bytes_per_cluster;
+                uint32_t cluster_skip = file->seek / bytes_per_cluster;
+                while (cluster_skip--) cluster = fat32_next_cluster(mountpoint, cluster);
+
+                size_t offset = first_cluster ? bytes_skip : 0;
+                first_cluster = false;
+
+                size_t write_size = (size - written < bytes_per_cluster) ? size - written : bytes_per_cluster;
+                bool write_success = gpt_write_partition_offset(mountpoint->partition->ahci, mountpoint->partition->entry, first_sector, offset, volume->bpb->sectors_per_cluster, inbuf, write_size);
+                if (!write_success) return 0;
+
+                written += write_size;
+
+                cluster = fat32_next_cluster(mountpoint, cluster);
+        }
+
+        ((fat_file *)file->driver_data)->size = size + file->seek;
+
+        return written;
 }
 
 fs_file_info *fat32_stat(fs_file *file) {
