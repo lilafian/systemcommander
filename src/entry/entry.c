@@ -80,6 +80,8 @@ static void halt() {
 }
 
 uint64_t hhdm_offset;
+
+// TODO: split into multiple functions
 void kenter() {
         if (LIMINE_BASE_REVISION_SUPPORTED(limine_base_revision) == false) {
                 halt();
@@ -198,6 +200,8 @@ void kenter() {
         read_success = ahci_read_virt(best_port, 2, 1, partitions);
         if (!read_success) panic("[init:kenter] Unable to read partition table at LBA 2");
 
+
+        // TODO: Add fstab support
         // for (uint32_t i = 0; i < best_port_header->entry_count; i++) {
         for (uint32_t i = 0; i < 1; i++) {
                 if (gpt_is_unused_partition(&partitions[i])) continue;
@@ -206,14 +210,6 @@ void kenter() {
 
                 gpt_register_partition(best_port, &partitions[i]);
                 mount(&gpt_partitions[0], &root_path, &fat32_fs_handler);
-
-                fs_path *write_test_path = create_path("/writeme.txt", 1);
-                fs_file *write_test_file = fopen(write_test_path, O_RDWR);
-                size_t bytes_written = fwrite(write_test_file, "Hello, world!", 14);
-                logf("Wrote %d bytes\n", bytes_written);
-                char *readbuf = malloc(14);
-                fread(write_test_file, readbuf, 14);
-                logn(readbuf, 14, '\n');
         }
 
         halt();
