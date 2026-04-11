@@ -104,6 +104,7 @@ bootimg-efi:
 
 .PHONY: bootimg-bios
 bootimg-bios:
+	@echo "MBR IS NOT SUPPORTED IN THE KERNEL YET! This image will not be able to mount disks."
 	make -C limine
 	mkdir -p build/img/boot
 	cp -v build/$(KBINOUTPUT) build/img/boot
