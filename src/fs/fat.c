@@ -116,7 +116,7 @@ fat_file *fat32_search_dir(fs_mountpoint *mountpoint, uint32_t cluster, char *fi
                 uint32_t fat_size = volume->bpb->sectors_per_fat == 0 ? ext.sectors_per_fat : volume->bpb->sectors_per_fat;
                 uint32_t first_data_sector = volume->bpb->reserved_sectors + (volume->bpb->fats * fat_size);
                 uint32_t first_sector = ((cluster - 2) * volume->bpb->sectors_per_cluster) + first_data_sector;
-                char *read_buf = malloc(volume->bpb->sectors_per_cluster * 512);
+                uint8_t *read_buf = malloc(volume->bpb->sectors_per_cluster * 512);
                 bool read_success = gpt_read_partition(mountpoint->partition->ahci, mountpoint->partition->entry, first_sector, volume->bpb->sectors_per_cluster, read_buf);
                 if (!read_success) return NULL;
 
@@ -195,7 +195,7 @@ timestamp fat_time_to_timestamp(uint16_t date, uint16_t time, uint8_t precision)
         if (current_is_leap) month_days[2] = 29;
 
         uint64_t days_months = 0;
-        for (int i = 1; i < month; i++) {
+        for (uint64_t i = 1; i < month; i++) {
                 days_months += month_days[i];
         }
 
@@ -252,6 +252,8 @@ size_t fat32_read_file(fs_file *file, void *buffer, size_t size) {
         fs_mountpoint *mountpoint = file->parent_mount;
         fat_volume *volume = mountpoint->driver_data;
         fat32_extended_boot_sector ext = *(fat32_extended_boot_sector*)volume->bpb->extended;
+        uint32_t fat_size = volume->bpb->sectors_per_fat == 0 ? ext.sectors_per_fat : volume->bpb->sectors_per_fat;
+        uint32_t first_data_sector = volume->bpb->reserved_sectors + (volume->bpb->fats * fat_size);
 
         if (size > file->size - file->seek) size = file->size - file->seek;
         
@@ -263,8 +265,6 @@ size_t fat32_read_file(fs_file *file, void *buffer, size_t size) {
 
         bool first_cluster = true;
         while (cluster < 0x0FFFFFF7 && written < size) {
-                uint32_t fat_size = volume->bpb->sectors_per_fat == 0 ? ext.sectors_per_fat : volume->bpb->sectors_per_fat;
-                uint32_t first_data_sector = volume->bpb->reserved_sectors + (volume->bpb->fats * fat_size);
                 uint32_t first_sector = ((cluster - 2) * volume->bpb->sectors_per_cluster) + first_data_sector;
 
                 size_t bytes_per_cluster = volume->bpb->sectors_per_cluster * 512;
@@ -296,6 +296,8 @@ size_t fat32_read_dir(fs_file *file, fs_file_info **buffer, size_t size) {
         fs_mountpoint *mountpoint = file->parent_mount;
         fat_volume *volume = mountpoint->driver_data;
         fat32_extended_boot_sector ext = *(fat32_extended_boot_sector*)volume->bpb->extended;
+        uint32_t fat_size = volume->bpb->sectors_per_fat == 0 ? ext.sectors_per_fat : volume->bpb->sectors_per_fat;
+        uint32_t first_data_sector = volume->bpb->reserved_sectors + (volume->bpb->fats * fat_size);
 
         uint16_t cluster_lo = ((fat_file *)file->driver_data)->first_cluster_lo;
         uint16_t cluster_up = ((fat_file *)file->driver_data)->first_cluster_up;
@@ -305,10 +307,8 @@ size_t fat32_read_dir(fs_file *file, fs_file_info **buffer, size_t size) {
         size_t entries_written = 0;
 
         while (cluster < 0x0FFFFFF7 && entries_written < max_entries) {
-                uint32_t fat_size = volume->bpb->sectors_per_fat == 0 ? ext.sectors_per_fat : volume->bpb->sectors_per_fat;
-                uint32_t first_data_sector = volume->bpb->reserved_sectors + (volume->bpb->fats * fat_size);
                 uint32_t first_sector = ((cluster - 2) * volume->bpb->sectors_per_cluster) + first_data_sector;
-                char *read_buf = malloc(volume->bpb->sectors_per_cluster * 512);
+                uint8_t *read_buf = malloc(volume->bpb->sectors_per_cluster * 512);
                 bool read_success = gpt_read_partition(mountpoint->partition->ahci, mountpoint->partition->entry, first_sector, volume->bpb->sectors_per_cluster, read_buf);
                 if (!read_success) return 0;
 
@@ -329,13 +329,10 @@ size_t fat32_read_dir(fs_file *file, fs_file_info **buffer, size_t size) {
 
                         fat_file *file = (fat_file *)entry;
                         char *name = NULL;
-                        uint16_t name_max_size = 0;
                         if (lfn_entry[0] != '\0') {
-                                name_max_size = 256;
                                 name = malloc(256);
                                 memcpy(name, lfn_entry, 256);
                         } else {
-                                name_max_size = 13;
                                 name = malloc(13);
                                 memset(name, 0, 13);
                                 for (int i = 0; i < 13; i++) {

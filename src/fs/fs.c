@@ -59,7 +59,7 @@ bool paths_equal(fs_path *p1, fs_path *p2) {
         if (p1->depth != p2->depth) return false;
         if (p1->depth == 0 && p2->depth == 0) return true;
 
-        for (int i = 0; i < p1->depth; i++) {
+        for (size_t i = 0; i < p1->depth; i++) {
                 if (strncmp(p1->components[i], p2->components[i], 255) != 0) return false;
         }
         return true;
@@ -100,7 +100,7 @@ fs_mountpoint *resolve_mountpoint(fs_path *path) {
 
                 bool match = true;
                 if (!paths_equal(mp->path, &root_path)) {
-                        for (int j = 0; j < mp->path->depth; j++) {
+                        for (size_t j = 0; j < mp->path->depth; j++) {
                                 if (mp->path->components[j] != path->components[j]) {
                                         match = false;
                                         break;
@@ -124,7 +124,7 @@ fs_path *strip_mountpoint(fs_path *path, fs_mountpoint *mountpoint) {
         char **components = malloc(sizeof(char *) * (path->depth - mountpoint->path->depth));
         new_path->components = components;
 
-        for (int i = 0; i < path->depth - mountpoint->path->depth; i++) {
+        for (size_t i = 0; i < path->depth - mountpoint->path->depth; i++) {
                 new_path->components[i] = path->components[i + mountpoint->path->depth];
         }
         

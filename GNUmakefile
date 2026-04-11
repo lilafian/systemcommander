@@ -19,6 +19,7 @@ LDFLAGS :=
 override CFLAGS += \
 	-Wall \
 	-Wextra \
+	-Werror \
 	-std=gnu11 \
 	-ffreestanding \
 	-fno-stack-protector \
