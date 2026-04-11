@@ -198,23 +198,14 @@ void kenter() {
         read_success = ahci_read_virt(best_port, 2, 1, partitions);
         if (!read_success) panic("[init:kenter] Unable to read partition table at LBA 2");
 
-        /* THIS DOES NOT WORK WITH >1 PARTITION. IT IS EARLY TEST CODE. DO NOT KEEP!!! */
-        for (uint32_t i = 0; i < best_port_header->entry_count; i++) {
+        // for (uint32_t i = 0; i < best_port_header->entry_count; i++) {
+        for (uint32_t i = 0; i < 1; i++) {
                 if (gpt_is_unused_partition(&partitions[i])) continue;
                 size_t size = (partitions[i].end_sector * 512) - (partitions[i].start_sector * 512);
                 logf("[init:kenter] Partition %d is %d bytes (%d KiB, %d MiB)\n", i + 1, size, size / 1024, size / 1024 / 1024);
 
                 gpt_register_partition(best_port, &partitions[i]);
                 mount(&gpt_partitions[0], &root_path, &fat32_fs_handler);
-
-                fs_path *test_file_path = create_path("/testinglongnameyay.txt", 1);
-                fs_file *test_file = fopen(test_file_path, O_RDONLY);
-                if (!test_file) break;
-
-                char *buffer = malloc(test_file->size);
-                size_t read_amount = fread(test_file, buffer, test_file->size);
-                logf("Read %d bytes from file:\n", read_amount);
-                logn(buffer, test_file->size, '\n');
         }
 
         halt();

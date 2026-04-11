@@ -95,6 +95,8 @@ typedef struct fs_handler {
         int (*unmount)(fs_mountpoint *mountpoint);
         fs_file *(*open)(fs_mountpoint *, fs_path *, fs_flags);
         size_t (*read)(fs_file *, void *, size_t);
+        size_t (*write)(fs_file *, void *, size_t);
+        fs_file_info *(*stat)(fs_file *);
         bool (*close)(fs_file *);
 } fs_handler;
 
@@ -111,5 +113,7 @@ fs_mountpoint *resolve_mountpoint(fs_path *path);
 fs_path *strip_mountpoint(fs_path *path, fs_mountpoint *mountpoint);
 
 fs_file *fopen(fs_path *path, fs_flags flags);
-size_t fread(fs_file *file, void *buffer, size_t size); // when file is a dir, will return an array of fs_file_info *s into the buffer
 bool fclose(fs_file *file);
+size_t fread(fs_file *file, void *buffer, size_t size); // when file is a dir, will return an array of fs_file_info *s into the buffer
+size_t fwrite(fs_file *file, void *inbuf, size_t size);
+fs_file_info *fstat(fs_file *file);

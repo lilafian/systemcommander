@@ -154,3 +154,7 @@ size_t fread(fs_file *file, void *buffer, size_t size) { // when file is a dir, 
 bool fclose(fs_file *file) {
         return file->parent_mount->handler->close(file);
 }
+
+fs_file_info *fstat(fs_file *file) {
+        return file->parent_mount->handler->stat(file);
+}

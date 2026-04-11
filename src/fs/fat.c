@@ -13,8 +13,9 @@ fs_handler fat32_fs_handler = {
         .mount = fat32_mount,
         .unmount = fat32_unmount,
         .open = fat32_open,
+        .close = fat32_close,
         .read = fat32_read,
-        .close = fat32_close
+        .stat = fat32_stat
 };
 
 fs_mountpoint *fat32_mount(gpt_partition *partition, fs_path *path) {
@@ -377,4 +378,27 @@ bool fat32_close(fs_file *file) {
         free(file->driver_data);
         free(file);
         return true;
+}
+
+fs_file_info *fat32_stat(fs_file *file) {
+        fat_file *ffile = (fat_file *)file->driver_data;
+        fs_file_info *info = malloc(sizeof(fs_file_info));
+
+        info->name = malloc(256);
+        memcpy(info->name, ffile->name, 256);
+
+        info->mode |= (ffile->attributes & FAT_FILE_ATTRIB_DIRECTORY ? S_FDIR : 0);
+        info->mode |= (ffile->attributes & FAT_FILE_ATTRIB_HIDDEN ? S_FHDN : 0);
+        info->mode |= (ffile->attributes & FAT_FILE_ATTRIB_SYSTEM ? S_FHDN : 0);
+        info->mode |= S_XUSR; // FAT32 has no executable attribute, so for now just allow all files to be executed
+        info->mode |= S_RUSR;
+        info->mode |= S_WUSR;
+        if (ffile->attributes & FAT_FILE_ATTRIB_READ_ONLY) info->mode &= ~S_WUSR;
+
+        info->creation_time = fat_time_to_timestamp(ffile->creation_date, ffile->creation_time, ffile->creation_time_precision);
+        info->modification_time = fat_time_to_timestamp(ffile->modification_date, ffile->modification_time, 0);
+
+        info->size = ffile->size;
+
+        return info;
 }
