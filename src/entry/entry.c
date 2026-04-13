@@ -202,15 +202,15 @@ void kenter() {
 
 
         // TODO: Add fstab support
-        // for (uint32_t i = 0; i < best_port_header->entry_count; i++) {
-        for (uint32_t i = 0; i < 1; i++) {
+        for (uint32_t i = 0; i < best_port_header->entry_count; i++) {
                 if (gpt_is_unused_partition(&partitions[i])) continue;
                 size_t size = (partitions[i].end_sector * 512) - (partitions[i].start_sector * 512);
                 logf("[init:kenter] Partition %d is %d bytes (%d KiB, %d MiB)\n", i + 1, size, size / 1024, size / 1024 / 1024);
 
                 gpt_register_partition(best_port, &partitions[i]);
-                mount(&gpt_partitions[0], &root_path, &fat32_fs_handler);
         }
+
+        mount(&gpt_partitions[0], &root_path, &fat32_fs_handler);
 
         halt();
 }

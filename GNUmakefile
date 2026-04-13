@@ -80,31 +80,44 @@ obj/%.asm.o: %.asm GNUmakefile
 	mkdir -p "$(dir $@)"
 	$(NASM) $(NASMFLAGS) $< -o $@
 
-.PHONY: bootimg-efi
-bootimg-efi:
+.PHONY: testimg-efi
+testimg-efi:
 	make -C limine
-	mkdir -p build/img/boot
-	cp -v build/$(KBINOUTPUT) build/img/boot
-	cp -v assets/fonts/$(DEFFONTNAME).psf build/img/boot/deffont.psf
-	mkdir -p build/img/boot/limine
-	cp -v limine.conf limine/limine-uefi-cd.bin build/img/boot/limine
-	mkdir -p build/img/EFI/BOOT
-	cp -v limine/BOOTX64.EFI build/img/EFI/BOOT
-	cp -v limine/BOOTIA32.EFI build/img/EFI/BOOT
-	dd if=/dev/zero of=$(IMGOUTPUT) bs=4M count=256 status=progress conv=fsync # 1g image
+	mkdir -p build/bootimg/boot
+	cp -v build/$(KBINOUTPUT) build/bootimg
+	cp -v assets/fonts/$(DEFFONTNAME).psf build/bootimg/deffont.psf
+	mkdir -p build/bootimg/EFI/limine
+	cp -v limine/limine-uefi-cd.bin build/bootimg/EFI/limine
+	cp -v limine.conf build/bootimg
+	mkdir -p build/bootimg/EFI/BOOT
+	cp -v limine/BOOTX64.EFI build/bootimg/EFI/BOOT
+	cp -v limine/BOOTIA32.EFI build/bootimg/EFI/BOOT
+	mkdir -p build/rootimg
+	cp -rv root/* build/rootimg
+	dd if=/dev/zero of=$(IMGOUTPUT) bs=4M count=512 status=progress conv=fsync # 2g image
 	parted $(IMGOUTPUT) mklabel gpt
-	parted -a optimal $(IMGOUTPUT) mkpart primary 1MiB 100%
+	parted -a optimal $(IMGOUTPUT) mkpart primary 1MiB 50%
+	parted -a optimal $(IMGOUTPUT) mkpart primary 50% 100%
 	LOOP=$$(sudo losetup --partscan --show --find $(IMGOUTPUT)); \
 	sudo mkfs.fat -F 32 $${LOOP}p1; \
-	mkdir -p build/imgmp; \
-	sudo mount $${LOOP}p1 build/imgmp; \
-	sudo cp -rv build/img/* build/imgmp; \
-	sudo umount build/imgmp; \
+	sudo mkfs.ext2 $${LOOP}p2; \
+	BOOTUUID=$$(sudo blkid | grep -oP '$${LOOP}\S+:\s+UUID="\K[^"]+' | head -n1); \
+	ROOTUUID=$$(sudo blkid | grep -oP '$${LOOP}\S+:\s+UUID="\K[^"]+' | tail -n1); \
+	echo "UUID=${ROOTUUID} / ext2 rw 0 1" > build/rootimg/etc/fstab; \
+	echo "UUID=${BOOTUUID} /boot vfat rw 0 2" >> build/rootimg/etc/fstab; \
+	mkdir -p build/bootimgmp; \
+	mkdir -p build/rootimgmp; \
+	sudo mount $${LOOP}p1 build/bootimgmp; \
+	sudo cp -rv build/bootimg/* build/bootimgmp; \
+	sudo umount build/bootimgmp; \
+	sudo mount $${LOOP}p2 build/rootimgmp; \
+	sudo cp -rv build/rootimg/* build/rootimgmp; \
+	sudo umount build/rootimgmp; \
 	sudo losetup -d $${LOOP}
 
-.PHONY: bootimg-bios
-bootimg-bios:
-	@echo "MBR IS NOT SUPPORTED IN THE KERNEL YET! This image will not be able to mount disks."
+.PHONY: testimg-bios
+testimg-bios:
+	@echo "MBR IS NOT SUPPORTED IN THE KERNEL YET! This image will not be able to mount disks, and does not include an ext2 root partition."
 	make -C limine
 	mkdir -p build/img/boot
 	cp -v build/$(KBINOUTPUT) build/img/boot
