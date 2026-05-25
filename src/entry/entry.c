@@ -24,6 +24,7 @@
 #include <syscom/fs/fat.h>
 #include <syscom/fs/ext2.h>
 #include <syscom/fs.h>
+#include <syscom/elf.h>
 
 __attribute__((used, section(".limine_requests")))
 static volatile uint64_t limine_base_revision[] = LIMINE_BASE_REVISION(6);
@@ -210,6 +211,11 @@ void kenter() {
         }
 
         mount(&gpt_partitions[1], &root_path, &ext2_fs_handler);
+        fs_path *testelf_path = create_path("/test.elf", 1);
+        fs_file *testelf_file = fopen(testelf_path, O_RDONLY);
+        char *buf = malloc(testelf_file->size);
+        fread(testelf_file, buf, testelf_file->size);
+        elf_load(buf, testelf_file->size);
 
         halt();
 }
