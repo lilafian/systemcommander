@@ -20,6 +20,17 @@ typedef struct gdt_entry {
         uint8_t base2;
 }__attribute__((packed)) gdt_entry;
 
+typedef struct gdt_entry16 {
+        uint16_t limit0;
+        uint16_t base0;
+        uint8_t base1;
+        uint8_t access_byte;
+        uint8_t limit1_flags;
+        uint8_t base2;
+        uint32_t base3;
+        uint32_t _reserved;
+}__attribute__((packed)) gdt_entry16;
+
 typedef struct gdt {
         gdt_entry null;
         gdt_entry kernel_code;
@@ -27,7 +38,9 @@ typedef struct gdt {
         gdt_entry user_null;
         gdt_entry user_code;
         gdt_entry user_data;
+        gdt_entry16 tss;
 }__attribute__((packed)) __attribute__((aligned(0x1000))) gdt;
 
 extern gdt default_gdt;
 extern void load_gdt(gdt_descriptor *gdt_desc);
+void gdt_install_tss(uint64_t base, uint32_t limit);

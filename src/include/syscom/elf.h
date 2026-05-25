@@ -31,6 +31,9 @@
 
 #define ELF_ISA_X86_64 0x3E
 
+#define USER_STACK_TOP 0x00007fffffffe000
+#define USER_STACK_SIZE 0x4000
+
 typedef struct elf_header {
         uint32_t magic;
         uint8_t bitness;
@@ -41,7 +44,7 @@ typedef struct elf_header {
         uint16_t type;
         uint16_t isa;
         uint32_t elf_version; // 1
-        uint64_t entry_offset;
+        uint64_t entry;
         uint64_t phdr_table_offset;
         uint64_t shdr_table_offset;
         uint32_t flags; // ignored for x86

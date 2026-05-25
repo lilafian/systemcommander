@@ -7,6 +7,7 @@
 #include <syscom/phys_allocator.h>
 #include <syscom/page_map.h>
 #include <syscom/log.h>
+#include <syscom/ring3.h>
 
 void elf_load(char *data, size_t data_size) {
         if (data_size < sizeof(elf_header)) {
@@ -42,6 +43,10 @@ void elf_load(char *data, size_t data_size) {
                 memcpy((void *)phdr->virtual_base, (void *)((uint64_t)data + phdr->data_offset), phdr->size_file);
         }
 
-        void (*entry)(void) = (void (*)())header->entry_offset;
-        entry();
+        for (uint64_t i = 0; i < USER_STACK_SIZE; i += 0x1000) {
+                uint64_t phys = (uint64_t)request_page();
+                map_virtual_memory(kernel_pml4, USER_STACK_TOP - USER_STACK_SIZE + i, phys, PAGE_PRESENT | PAGE_RW | PAGE_USER);
+        }
+
+        jump_usermode(header->entry, USER_STACK_TOP);
 }

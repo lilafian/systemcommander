@@ -25,6 +25,7 @@
 #include <syscom/fs/ext2.h>
 #include <syscom/fs.h>
 #include <syscom/elf.h>
+#include <syscom/tss.h>
 
 __attribute__((used, section(".limine_requests")))
 static volatile uint64_t limine_base_revision[] = LIMINE_BASE_REVISION(6);
@@ -82,6 +83,7 @@ static void halt() {
 }
 
 uint64_t hhdm_offset;
+extern char stack_top[];
 
 // TODO: split into multiple functions
 void kenter() {
@@ -125,6 +127,8 @@ void kenter() {
         gdt_desc.size = sizeof(gdt) - 1;
         gdt_desc.offset = (uint64_t)&default_gdt;
         load_gdt(&gdt_desc);
+        tss_init((uint64_t)stack_top);
+        load_tss();
 
         idtr idtr_struct;
         idtr_struct.limit = 0x0fff;
@@ -216,6 +220,8 @@ void kenter() {
         char *buf = malloc(testelf_file->size);
         fread(testelf_file, buf, testelf_file->size);
         elf_load(buf, testelf_file->size);
+
+        log("[init:kenter] If you see this, then the program is NOT in ring 3. otherwise, yay!\n");
 
         halt();
 }
