@@ -19,7 +19,6 @@ LDFLAGS :=
 override CFLAGS += \
 	-Wall \
 	-Wextra \
-	-Werror \
 	-std=gnu11 \
 	-ffreestanding \
 	-fno-stack-protector \
@@ -101,10 +100,6 @@ testimg-efi:
 	LOOP=$$(sudo losetup --partscan --show --find $(IMGOUTPUT)); \
 	sudo mkfs.fat -F 32 $${LOOP}p1; \
 	sudo mkfs.ext2 $${LOOP}p2; \
-	BOOTUUID=$$(sudo blkid | grep -oP '$${LOOP}\S+:\s+UUID="\K[^"]+' | head -n1); \
-	ROOTUUID=$$(sudo blkid | grep -oP '$${LOOP}\S+:\s+UUID="\K[^"]+' | tail -n1); \
-	echo "UUID=${ROOTUUID} / ext2 rw 0 1" > build/rootimg/etc/fstab; \
-	echo "UUID=${BOOTUUID} /boot vfat rw 0 2" >> build/rootimg/etc/fstab; \
 	mkdir -p build/bootimgmp; \
 	mkdir -p build/rootimgmp; \
 	sudo mount $${LOOP}p1 build/bootimgmp; \

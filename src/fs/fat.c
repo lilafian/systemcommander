@@ -92,8 +92,6 @@ fs_file *fat_open_fat_file(fat_file *file, fs_flags flags, fs_mountpoint *parent
         memset(fsfile, 0, sizeof(fs_file));
 
         fsfile->mode |= (file->attributes & FAT_FILE_ATTRIB_DIRECTORY ? S_FDIR : 0);
-        fsfile->mode |= (file->attributes & FAT_FILE_ATTRIB_HIDDEN ? S_FHDN : 0);
-        fsfile->mode |= (file->attributes & FAT_FILE_ATTRIB_SYSTEM ? S_FHDN : 0);
         fsfile->mode |= S_XUSR; // FAT32 has no executable attribute, so for now just allow all files to be executed
         fsfile->mode |= S_RUSR;
         fsfile->mode |= S_WUSR;
@@ -176,7 +174,7 @@ fat_file *fat32_search_dir(fs_mountpoint *mountpoint, uint32_t cluster, char *fi
         return NULL;
 }
 
-timestamp fat_time_to_timestamp(uint16_t date, uint16_t time, uint8_t precision) {
+timestamp fat_time_to_timestamp(uint16_t date, uint16_t time) {
         uint64_t year = FAT_DATE_YEAR(date);
         uint64_t month = FAT_DATE_MONTH(date);
         uint64_t day = FAT_DATE_DAY(date);
@@ -200,7 +198,7 @@ timestamp fat_time_to_timestamp(uint16_t date, uint16_t time, uint8_t precision)
         }
 
         uint64_t total_days = days_years + days_months + (day - 1);
-        return ((total_days * 86400) + (hour * 3600) + (min * 60) + sec) * 100 + precision;
+        return ((total_days * 86400) + (hour * 3600) + (min * 60) + sec);
 }
 
 fs_file *fat32_open(fs_mountpoint *mountpoint, fs_path *path, fs_flags flags) {
@@ -351,15 +349,13 @@ size_t fat32_read_dir(fs_file *file, fs_file_info **buffer, size_t size) {
                         memcpy(info->name, name, 256);
 
                         info->mode |= (file->attributes & FAT_FILE_ATTRIB_DIRECTORY ? S_FDIR : 0);
-                        info->mode |= (file->attributes & FAT_FILE_ATTRIB_HIDDEN ? S_FHDN : 0);
-                        info->mode |= (file->attributes & FAT_FILE_ATTRIB_SYSTEM ? S_FHDN : 0);
                         info->mode |= S_XUSR; // FAT32 has no executable attribute, so for now just allow all files to be executed
                         info->mode |= S_RUSR;
                         info->mode |= S_WUSR;
                         if (file->attributes & FAT_FILE_ATTRIB_READ_ONLY) info->mode &= ~S_WUSR;
 
-                        info->creation_time = fat_time_to_timestamp(file->creation_date, file->creation_time, file->creation_time_precision);
-                        info->modification_time = fat_time_to_timestamp(file->modification_date, file->modification_time, 0);
+                        info->creation_time = fat_time_to_timestamp(file->creation_date, file->creation_time);
+                        info->modification_time = fat_time_to_timestamp(file->modification_date, file->modification_time);
 
                         info->size = file->size;
 
@@ -428,20 +424,19 @@ size_t fat32_write(fs_file *file, void *inbuf, size_t size) {
 fs_file_info *fat32_stat(fs_file *file) {
         fat_file *ffile = (fat_file *)file->driver_data;
         fs_file_info *info = malloc(sizeof(fs_file_info));
+        memset(info, 0, sizeof(fs_file_info));
 
         info->name = malloc(256);
         memcpy(info->name, ffile->name, 256);
 
         info->mode |= (ffile->attributes & FAT_FILE_ATTRIB_DIRECTORY ? S_FDIR : 0);
-        info->mode |= (ffile->attributes & FAT_FILE_ATTRIB_HIDDEN ? S_FHDN : 0);
-        info->mode |= (ffile->attributes & FAT_FILE_ATTRIB_SYSTEM ? S_FHDN : 0);
         info->mode |= S_XUSR; // FAT32 has no executable attribute, so for now just allow all files to be executed
         info->mode |= S_RUSR;
         info->mode |= S_WUSR;
         if (ffile->attributes & FAT_FILE_ATTRIB_READ_ONLY) info->mode &= ~S_WUSR;
 
-        info->creation_time = fat_time_to_timestamp(ffile->creation_date, ffile->creation_time, ffile->creation_time_precision);
-        info->modification_time = fat_time_to_timestamp(ffile->modification_date, ffile->modification_time, 0);
+        info->creation_time = fat_time_to_timestamp(ffile->creation_date, ffile->creation_time);
+        info->modification_time = fat_time_to_timestamp(ffile->modification_date, ffile->modification_time);
 
         info->size = ffile->size;
 

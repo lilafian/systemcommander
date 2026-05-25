@@ -151,7 +151,7 @@ bool ahci_read(ahci_port *port, uint64_t start_sector, uint32_t count, void *buf
         return true;
 }
 
-bool ahci_read_virt(ahci_port *port, uint64_t start_sector, uint32_t count, void *buffer) {
+/*bool ahci_read_virt(ahci_port *port, uint64_t start_sector, uint32_t count, void *buffer) {
         port->buffer = request_pages(count % 2 == 0 ? count : count + 1);
         if (!port->buffer) return false;
         map_virtual_memory(kernel_pml4, (uint64_t)port->buffer, (uint64_t)port->buffer, PAGE_RW);
@@ -161,6 +161,23 @@ bool ahci_read_virt(ahci_port *port, uint64_t start_sector, uint32_t count, void
         if (!success) return false;
         
         memcpy(buffer, port->buffer, count * 512);
+        return true;
+}*/
+
+bool ahci_read_virt(ahci_port *port, uint64_t start_sector, uint32_t count, void *buffer) {
+        uint32_t pages_needed = (count * 512 + 0xFFF) / 0x1000;
+        void *dma_buf = request_pages(pages_needed);
+        if (!dma_buf) return false;
+        for (uint32_t i = 0; i < pages_needed; i++)
+                map_virtual_memory(kernel_pml4,
+                                (uint64_t)dma_buf + i * 0x1000,
+                                (uint64_t)dma_buf + i * 0x1000,
+                                PAGE_RW);
+        memset(dma_buf, 0, count * 512);
+        bool success = ahci_read(port, start_sector, count, dma_buf);
+        if (!success) { free_pages(dma_buf, pages_needed); return false; }
+        memcpy(buffer, dma_buf, count * 512);
+        free_pages(dma_buf, pages_needed);
         return true;
 }
 

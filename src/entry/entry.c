@@ -22,6 +22,7 @@
 #include <syscom/drivers/ahci.h>
 #include <syscom/gpt.h>
 #include <syscom/fs/fat.h>
+#include <syscom/fs/ext2.h>
 #include <syscom/fs.h>
 
 __attribute__((used, section(".limine_requests")))
@@ -200,8 +201,6 @@ void kenter() {
         read_success = ahci_read_virt(best_port, 2, 1, partitions);
         if (!read_success) panic("[init:kenter] Unable to read partition table at LBA 2");
 
-
-        // TODO: Add fstab support
         for (uint32_t i = 0; i < best_port_header->entry_count; i++) {
                 if (gpt_is_unused_partition(&partitions[i])) continue;
                 size_t size = (partitions[i].end_sector * 512) - (partitions[i].start_sector * 512);
@@ -210,7 +209,15 @@ void kenter() {
                 gpt_register_partition(best_port, &partitions[i]);
         }
 
-        mount(&gpt_partitions[0], &root_path, &fat32_fs_handler);
+        mount(&gpt_partitions[1], &root_path, &ext2_fs_handler);
+
+        fs_path *hello_path = create_path("/hello/hello.txt", 2);
+        fs_file *hello_file = fopen(hello_path, O_RDONLY);
+        char *hello_buffer = malloc(hello_file->size + 1);
+        memset(hello_buffer, 0, hello_file->size + 1);
+        fread(hello_file, hello_buffer, 5);
+        fread(hello_file, hello_buffer + 5, hello_file->size - 4);
+        logf("[init:kenter] %s\n", hello_buffer);
 
         halt();
 }

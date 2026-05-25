@@ -11,6 +11,7 @@
 
 #define FS_TYPE_NONE 0
 #define FS_TYPE_FAT32 1
+#define FS_TYPE_EXT2 2
 
 #define O_ACCMODE 00000003
 #define O_RDONLY 00000000
@@ -40,7 +41,6 @@
 #define S_FMT 0170000
 #define S_FREG 0100000
 #define S_FDIR 0040000
-#define S_FHDN 0001000 // NOT unix
 #define S_RUSR 0400
 #define S_WUSR 0200
 #define S_XUSR 0100
@@ -49,7 +49,7 @@
 
 #define UNMOUNT_ERR_NOT_MOUNTED 1
 
-typedef uint64_t timestamp; // Time in centiseconds since 1/1/1970
+typedef uint64_t timestamp; // POSIX time
 
 typedef struct fs_path {
         char **components;

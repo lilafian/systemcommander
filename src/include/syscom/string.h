@@ -17,3 +17,4 @@ char *strcat(char *restrict dst, char *restrict src);
 char *strchrcat(char *restrict dst, const char src);
 char *itoa(uint64_t val, int base);
 int strncmp(const char *s, const char *t, size_t n);
+int strcmp(const char *s, const char *t);

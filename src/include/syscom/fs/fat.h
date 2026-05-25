@@ -118,7 +118,7 @@ extern fs_handler fat32_fs_handler;
 
 fs_mountpoint *fat32_mount(gpt_partition *partition, fs_path *path);
 int fat32_unmount(fs_mountpoint *mountpoint);
-fs_file *fat32_open(fs_mountpoint *, fs_path *path, fs_flags flags);
+fs_file *fat32_open(fs_mountpoint *mountpoint, fs_path *path, fs_flags flags);
 bool fat32_close(fs_file *file);
 size_t fat32_read(fs_file *file, void *buffer, size_t size);
 size_t fat32_read_file(fs_file *file, void *buffer, size_t size);

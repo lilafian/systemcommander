@@ -101,7 +101,7 @@ fs_mountpoint *resolve_mountpoint(fs_path *path) {
                 bool match = true;
                 if (!paths_equal(mp->path, &root_path)) {
                         for (size_t j = 0; j < mp->path->depth; j++) {
-                                if (mp->path->components[j] != path->components[j]) {
+                                if (strcmp(mp->path->components[j], path->components[j]) != 0) {
                                         match = false;
                                         break;
                                 }
