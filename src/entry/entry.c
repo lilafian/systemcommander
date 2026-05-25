@@ -217,7 +217,9 @@ void kenter() {
         memset(hello_buffer, 0, hello_file->size + 1);
         fread(hello_file, hello_buffer, 5);
         fread(hello_file, hello_buffer + 5, hello_file->size - 4);
-        logf("[init:kenter] %s\n", hello_buffer);
+        fs_file_info *hello_stat = fstat(hello_file);
+        logf("[init:kenter] hello_stat->name = %s\n", hello_stat->name);
+        logf("[init:kenter] hello_buffer = %s", hello_buffer);
 
         halt();
 }

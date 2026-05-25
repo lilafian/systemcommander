@@ -16,7 +16,7 @@ fs_handler ext2_fs_handler = {
         .open = ext2_open,
         .close = ext2_close,
         .read = ext2_read,
-        .write = ext2_write,
+        .write = NULL,
         .stat = ext2_stat
 };
 
@@ -68,7 +68,6 @@ ext2_inode *ext2_get_inode(fs_mountpoint *mountpoint, uint32_t inode) {
         ext2_superblock *superblock = ((ext2_volume *)(mountpoint->driver_data))->superblock;
         gpt_partition *partition = mountpoint->partition;
         uint32_t block_size = 1024 << superblock->block_size_shift;
-        uint32_t blocks_per_group = superblock->blocks_per_group;
         uint32_t inodes_per_group = superblock->inodes_per_group;
         uint32_t bgdt_start_block = (block_size == 1024) ? 2 : 1;
         uint32_t inode_block_group = (inode - 1) / inodes_per_group;
@@ -208,10 +207,11 @@ ext2_file *ext2_search_dir(fs_mountpoint *mountpoint, ext2_inode *inode, char *f
                 if (dirent->inode == 0) break;
                 char *name = &dirent->name_start;
                 if (strncmp(name, filename, dirent->name_length_lo) == 0) {
-                        free(content);
                         ext2_file *drvfile = malloc(sizeof(ext2_file));
                         drvfile->inode = ext2_get_inode(mountpoint, dirent->inode);
-                        drvfile->dirent = dirent;
+                        drvfile->dirent = malloc(dirent->entry_size);
+                        memcpy(drvfile->dirent, dirent, dirent->entry_size);
+                        free(content);
                         return drvfile;
                 }
 
@@ -222,47 +222,46 @@ ext2_file *ext2_search_dir(fs_mountpoint *mountpoint, ext2_inode *inode, char *f
         return NULL;
 }
 
-fs_file *ext2_open_inode(ext2_inode *inode, fs_flags flags, fs_mountpoint *parent_mount) {
+fs_file *ext2_open_inode(ext2_file *drvfile, fs_flags flags, fs_mountpoint *parent_mount) {
         fs_file *fsfile = malloc(sizeof(fs_file));
         memset(fsfile, 0, sizeof(fs_file));
 
-        fsfile->mode = inode->type_permissions;
+        fsfile->mode = drvfile->inode->type_permissions;
 
         fsfile->flags = flags;
         fsfile->parent_mount = parent_mount;
         fsfile->seek = 0;
-        fsfile->size = inode->size_lo;
+        fsfile->size = drvfile->inode->size_lo;
         
-        ext2_file *drvfile = malloc(sizeof(ext2_file));
-        drvfile->inode = inode;
-
         fsfile->driver_data = drvfile;
         return fsfile;
 }
 
 fs_file *ext2_open(fs_mountpoint *mountpoint, fs_path *path, fs_flags flags) {
-        ext2_inode *inode = ext2_get_inode(mountpoint, EXT2_ROOT_INODE);
+        ext2_file *file = malloc(sizeof(ext2_file));
+        memset(file, 0, sizeof(ext2_file));
+        file->inode = ext2_get_inode(mountpoint, EXT2_ROOT_INODE);
         for (size_t i = 0; i < path->depth; i++) {
-                ext2_inode *new_inode = ext2_search_dir(mountpoint, inode, path->components[i]);
-                free(inode);
-                inode = new_inode;
-                if (!inode) {
+                ext2_file *new_file = ext2_search_dir(mountpoint, file->inode, path->components[i]);
+                free(file);
+                file = new_file;
+                if (!file) {
                         logf("[fs:ext2_open] <FATAL> File %s does not exist or read failed for another reason (Component %d/%d of path)\n", path->components[i], i + 1, path->depth);
                         return NULL;
                 }
         }
 
-        if (!inode) {
+        if (!file) {
                 log("[fs:ext2_open] <FATAL> Failed to open file\n");
                 return NULL;
         }
 
-        return ext2_open_inode(inode, flags, mountpoint);
+        return ext2_open_inode(file, flags, mountpoint);
 }
 
 bool ext2_close(fs_file *file) {
-        free(file->driver_data->inode);
-        free(file->driver_data->dirent);
+        free(((ext2_file *)file->driver_data)->inode);
+        free(((ext2_file *)file->driver_data)->dirent);
         free(file->driver_data);
         free(file);
         return true;
@@ -339,8 +338,8 @@ fs_file_info *ext2_stat(fs_file *file) {
         memset(info, 0, sizeof(fs_file_info));
  
         info->name = malloc(dirent->name_length_lo + 1);
-        memset(info, 0, dirent->name_length_lo + 1);
-        memcpy(info->name, dirent->name_start, dirent->name_length_lo);
+        memset(info->name, 0, dirent->name_length_lo + 1);
+        memcpy(info->name, &dirent->name_start, dirent->name_length_lo);
 
         info->creation_time = inode->creation_time;
         info->modification_time = inode->last_modification_time;
