@@ -17,11 +17,11 @@ __attribute__((aligned(0x1000))) gdt default_gdt = {
     .user_null = {
         0, 0, 0, 0x00, 0x00, 0
     }, 
-    .user_code = {
-        0, 0, 0, 0xfa, 0xa0, 0
-    },
     .user_data = {
         0, 0, 0, 0xf2, 0xa0, 0
+    },
+    .user_code = {
+        0, 0, 0, 0xfa, 0xa0, 0
     },
 };
 
