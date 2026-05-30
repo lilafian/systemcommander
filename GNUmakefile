@@ -94,13 +94,14 @@ testimg-efi:
 	cp -v limine/BOOTIA32.EFI build/bootimg/EFI/BOOT
 	mkdir -p build/rootimg
 	cp -rv root/* build/rootimg
-	dd if=/dev/zero of=$(IMGOUTPUT) bs=4M count=512 status=progress conv=fsync # 2g image
+	truncate -s 2G $(IMGOUTPUT)
+	wipefs -a --force $(IMGOUTPUT)
 	parted $(IMGOUTPUT) mklabel gpt
 	parted -a optimal $(IMGOUTPUT) mkpart primary 1MiB 50%
 	parted -a optimal $(IMGOUTPUT) mkpart primary 50% 100%
 	LOOP=$$(sudo losetup --partscan --show --find $(IMGOUTPUT)); \
 	sudo mkfs.fat -F 32 $${LOOP}p1; \
-	sudo mkfs.ext2 $${LOOP}p2; \
+	sudo mkfs.ext2 -F $${LOOP}p2; \
 	mkdir -p build/bootimgmp; \
 	mkdir -p build/rootimgmp; \
 	sudo mount $${LOOP}p1 build/bootimgmp; \
